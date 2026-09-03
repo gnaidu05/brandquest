@@ -1,0 +1,82 @@
+import { motion } from "framer-motion";
+
+interface AnswerButtonProps {
+  text: string;
+  index: number;
+  onClick?: () => void;
+  selected?: boolean;
+  disabled?: boolean;
+  variant?: "default" | "compact" | "icon";
+}
+
+const COLORS = [
+  { bg: "bg-kahoot-red", hover: "hover:brightness-110", icon: "▲" },
+  { bg: "bg-kahoot-blue", hover: "hover:brightness-110", icon: "◆" },
+  { bg: "bg-kahoot-yellow", hover: "hover:brightness-110", icon: "●" },
+  { bg: "bg-kahoot-green", hover: "hover:brightness-110", icon: "■" },
+];
+
+export default function AnswerButton({
+  text,
+  index,
+  onClick,
+  selected,
+  disabled,
+  variant = "default",
+}: AnswerButtonProps) {
+  const color = COLORS[index % 4];
+
+  if (variant === "icon") {
+    return (
+      <motion.button
+        whileHover={!disabled ? { scale: 1.05 } : undefined}
+        whileTap={!disabled ? { scale: 0.95 } : undefined}
+        onClick={onClick}
+        disabled={disabled}
+        className={`w-16 h-16 rounded-2xl ${color.bg} flex items-center justify-center text-2xl font-bold transition-all ${
+          selected ? "ring-4 ring-white scale-105" : ""
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
+      >
+        {color.icon}
+      </motion.button>
+    );
+  }
+
+  if (variant === "compact") {
+    return (
+      <motion.button
+        whileHover={!disabled ? { scale: 1.02 } : undefined}
+        whileTap={!disabled ? { scale: 0.98 } : undefined}
+        onClick={onClick}
+        disabled={disabled}
+        className={`flex items-center gap-3 p-3 rounded-xl ${color.bg} transition-all text-left ${
+          selected ? "ring-4 ring-white" : ""
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
+      >
+        <span className="text-lg w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+          {color.icon}
+        </span>
+        <span className="text-sm font-medium line-clamp-2">{text}</span>
+      </motion.button>
+    );
+  }
+
+  return (
+    <motion.button
+      whileHover={!disabled ? { scale: 1.03, y: -2 } : undefined}
+      whileTap={!disabled ? { scale: 0.97 } : undefined}
+      onClick={onClick}
+      disabled={disabled}
+      className={`game-btn flex items-center gap-4 p-5 rounded-2xl ${color.bg} transition-all ${
+        selected ? "ring-4 ring-white" : ""
+      } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
+    >
+      <span className="text-2xl w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+        {color.icon}
+      </span>
+      <span className="text-lg font-semibold line-clamp-2">{text}</span>
+    </motion.button>
+  );
+}
+
+export { COLORS };

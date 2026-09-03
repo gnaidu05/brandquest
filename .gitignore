@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env.local
+.env
+
+# Build
+dist/
+
+# Convex
+.convex/
+
+# IDE
+.vscode/
+.idea/

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getLeaderboard, getQuestionAnswers, showResults, nextQuestion, subscribeToGame, subscribeToAnswers, type Question, type Answer, type LeaderboardEntry } from "../lib/api";
+import { getGame, getQuestions, getLeaderboard, getQuestionAnswers, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswers, type Question, type Answer, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -13,16 +13,27 @@ export default function AdminGame() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [playerCount, setPlayerCount] = useState(0);
 
   useEffect(() => {
     if (!gameId) return;
-    getGame(gameId).then((g) => { setGame(g); if (g) getQuestions(g.quiz_id).then(setQuestions); });
+    getGame(gameId).then((g) => {
+      setGame(g);
+      if (g) {
+        getQuestions(g.quiz_id).then(setQuestions);
+        getNonHostPlayers(g.id).then((ps) => setPlayerCount(ps.length));
+      }
+    });
     getLeaderboard(gameId).then(setLeaderboard);
   }, [gameId]);
 
   useEffect(() => {
     if (!gameId) return;
-    return subscribeToGame(gameId, (g) => { setGame(g); getLeaderboard(gameId).then(setLeaderboard); });
+    return subscribeToGame(gameId, (g) => {
+      setGame(g);
+      getLeaderboard(gameId).then(setLeaderboard);
+      getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length));
+    });
   }, [gameId]);
 
   useEffect(() => {
@@ -37,6 +48,13 @@ export default function AdminGame() {
   const handleShowResults = async () => { if (game) await showResults(game.id); };
   const handleNextQuestion = async () => { if (game) await nextQuestion(game.id); };
 
+  // Calculate elapsed time for synced timer
+  const getElapsedTime = (): number => {
+    if (!game?.question_start_time) return 0;
+    const start = new Date(game.question_start_time).getTime();
+    return (Date.now() - start) / 1000;
+  };
+
   if (!game || !questions.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -48,6 +66,9 @@ export default function AdminGame() {
 
   const currentQuestion = questions[game.current_question_index];
   const isLastQuestion = game.current_question_index >= questions.length - 1;
+  const elapsed = getElapsedTime();
+  const timeLimit = currentQuestion?.time_limit ?? 20;
+  const remaining = Math.max(0, timeLimit - elapsed);
 
   if (game.status === "lobby") {
     return (
@@ -89,15 +110,21 @@ export default function AdminGame() {
     <div className="min-h-screen flex flex-col px-4 py-6">
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-white/40">Question {(game.current_question_index ?? 0) + 1} of {questions.length}</div>
-        <div className="text-sm text-white/40">Answers: <span className="text-white font-bold">{answers.length}</span></div>
+        <div className="text-sm text-white/40">
+          Answers: <span className="text-white font-bold">{answers.length}</span>
+          <span className="text-white/30"> / {playerCount}</span>
+        </div>
       </div>
+
       <div className="flex justify-center mb-4">
-        <CountdownTimer duration={currentQuestion?.time_limit ?? 20} onTimeUp={() => {}} isActive={false} size={80} />
+        <CountdownTimer duration={timeLimit} onTimeUp={() => {}} isActive={game.status === "question"} size={80} startTime={game.question_start_time} />
       </div>
+
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         <div className="card-glass rounded-3xl p-6 mb-4">
           <h2 className="text-xl md:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
         </div>
+
         <div className="grid grid-cols-2 gap-2 mb-4">
           {currentQuestion?.options.map((option, i) => {
             const count = answers.filter((a) => a.selected_option === i).length;
@@ -111,6 +138,7 @@ export default function AdminGame() {
             );
           })}
         </div>
+
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleShowResults}
           className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-xl font-bold">Show Results 📊</motion.button>
       </div>

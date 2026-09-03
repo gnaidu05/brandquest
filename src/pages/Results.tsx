@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getLeaderboard, type LeaderboardEntry } from "../lib/api";
+import { getGame, getQuestions, getLeaderboard, getNonHostPlayers, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
 import Leaderboard from "../components/Leaderboard";
 
@@ -18,10 +18,8 @@ export default function Results() {
         getQuestions(g.quiz_id).then((qs) => setQuestionCount(qs.length));
       }
     });
-    getLeaderboard(gameId).then((lb) => {
-      setLeaderboard(lb);
-      setPlayerCount(lb.length);
-    });
+    getLeaderboard(gameId).then(setLeaderboard);
+    getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length));
   }, [gameId]);
 
   if (leaderboard.length === 0) {

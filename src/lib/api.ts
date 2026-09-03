@@ -32,6 +32,7 @@ export interface Game {
   show_leaderboard: boolean;
   start_time: string | null;
   end_time: string | null;
+  question_start_time: string | null;
 }
 
 export interface Player {
@@ -208,12 +209,14 @@ export async function getGame(id: string): Promise<Game | null> {
 }
 
 export async function startGame(gameId: string): Promise<void> {
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from("games")
     .update({
       status: "question",
       current_question_index: 0,
-      start_time: new Date().toISOString(),
+      start_time: now,
+      question_start_time: now,
     })
     .eq("id", gameId);
   if (error) throw error;
@@ -239,6 +242,7 @@ export async function showResults(gameId: string): Promise<void> {
 export async function nextQuestion(gameId: string): Promise<void> {
   const game = await getGame(gameId);
   if (!game) throw new Error("Game not found");
+  const now = new Date().toISOString();
 
   const { error } = await supabase
     .from("games")
@@ -246,6 +250,7 @@ export async function nextQuestion(gameId: string): Promise<void> {
       status: "question",
       current_question_index: game.current_question_index + 1,
       show_leaderboard: false,
+      question_start_time: now,
     })
     .eq("id", gameId);
   if (error) throw error;
@@ -390,11 +395,22 @@ export async function getPlayers(gameId: string): Promise<Player[]> {
   return data ?? [];
 }
 
+export async function getNonHostPlayers(gameId: string): Promise<Player[]> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("is_host", false);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getLeaderboard(gameId: string): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase
     .from("players")
     .select("*")
     .eq("game_id", gameId)
+    .eq("is_host", false)
     .order("score", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((p, i) => ({

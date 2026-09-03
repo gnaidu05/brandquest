@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getPlayers, getLeaderboard, getQuestionAnswers, submitAnswer, subscribeToGame, subscribeToAnswers, type Question, type Player, type Answer, type LeaderboardEntry } from "../lib/api";
+import { getGame, getQuestions, getNonHostPlayers, getLeaderboard, getQuestionAnswers, submitAnswer, subscribeToGame, subscribeToAnswers, type Question, type Player, type Answer, type LeaderboardEntry } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -27,7 +27,7 @@ export default function PlayGame() {
   useEffect(() => {
     if (!gameId) return;
     getGame(gameId).then((g) => { setGame(g); if (g) getQuestions(g.quiz_id).then(setQuestions); });
-    getPlayers(gameId).then(setPlayers);
+    getNonHostPlayers(gameId).then(setPlayers);
     getLeaderboard(gameId).then(setLeaderboard);
   }, [gameId]);
 
@@ -145,7 +145,7 @@ export default function PlayGame() {
       </div>
       <div className="flex justify-center mb-6">
         <CountdownTimer duration={currentQuestion.time_limit} onTimeUp={handleTimeUp}
-          isActive={!answered && game.status === "question"} size={100} />
+          isActive={!answered && game.status === "question"} size={100} startTime={game.question_start_time} />
       </div>
       <AnimatePresence mode="wait">
         <motion.div key={game.current_question_index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}

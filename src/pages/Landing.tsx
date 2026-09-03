@@ -17,8 +17,6 @@ const steps = [
   { num: "4", title: "See Results", desc: "Watch the leaderboard update live." },
 ];
 
-const colorDots = ["bg-kahoot-red", "bg-kahoot-blue", "bg-kahoot-yellow", "bg-kahoot-green"];
-
 export default function Landing() {
   const navigate = useNavigate();
   const [joinPin, setJoinPin] = useState("");
@@ -27,10 +25,10 @@ export default function Landing() {
     <div className="min-h-screen">
       <Navbar />
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-16 overflow-hidden">
-        <div className="absolute top-24 left-[8%] w-28 h-28 rounded-full bg-kahoot-red/20 blur-2xl animate-float" />
-        <div className="absolute top-1/3 right-[10%] w-24 h-24 rounded-full bg-kahoot-blue/20 blur-2xl animate-float" style={{ animationDelay: "1s" }} />
+      {/* HERO — anchored below navbar, centered column */}
+      <section className="relative px-6 pt-40 pb-20 overflow-hidden">
+        <div className="absolute top-28 left-[8%] w-28 h-28 rounded-full bg-kahoot-red/20 blur-2xl animate-float" />
+        <div className="absolute top-1/2 right-[10%] w-24 h-24 rounded-full bg-kahoot-blue/20 blur-2xl animate-float" style={{ animationDelay: "1s" }} />
         <div className="absolute bottom-1/4 left-[15%] w-20 h-20 rounded-full bg-kahoot-yellow/20 blur-2xl animate-float" style={{ animationDelay: "2s" }} />
         <div className="absolute bottom-1/3 right-[15%] w-32 h-32 rounded-full bg-kahoot-green/15 blur-2xl animate-float" style={{ animationDelay: "0.5s" }} />
 
@@ -38,15 +36,15 @@ export default function Landing() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="text-center max-w-3xl mx-auto relative z-10"
+          className="text-center max-w-6xl mx-auto relative z-10"
         >
           <motion.div
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 150, damping: 12, delay: 0.2 }}
-            className="w-28 h-28 mx-auto mb-10 rounded-3xl kahoot-gradient flex items-center justify-center animate-pulse-glow shadow-2xl"
+            className="w-24 h-24 mx-auto mb-8 rounded-3xl kahoot-gradient flex items-center justify-center animate-pulse-glow shadow-2xl"
           >
-            <span className="text-6xl font-black">Q</span>
+            <span className="text-5xl font-black">Q</span>
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 leading-[1.05] tracking-tight">
@@ -55,12 +53,12 @@ export default function Landing() {
             <span className="text-kahoot-yellow">Fun & Engaging</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
             Create interactive quizzes and host live game sessions.
             Challenge friends, compete in real-time, and make every question count.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
@@ -111,7 +109,7 @@ export default function Landing() {
       </section>
 
       {/* FEATURES */}
-      <section className="py-28 px-6 bg-white/[0.02]">
+      <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -148,8 +146,8 @@ export default function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-28 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -159,6 +157,9 @@ export default function Landing() {
             <h2 className="text-4xl sm:text-5xl font-black tracking-tight">
               How It <span className="text-kahoot-green">Works</span>
             </h2>
+            <p className="text-lg text-white/40 max-w-xl mx-auto leading-relaxed">
+              From creation to celebration — the whole flow takes minutes.
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -188,14 +189,14 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="py-28 px-6">
+      <section className="py-24 px-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center"
+          className="max-w-6xl mx-auto"
         >
-          <div className="card-glass rounded-3xl p-12 sm:p-16 relative overflow-hidden">
+          <div className="card-glass rounded-3xl p-12 sm:p-16 relative overflow-hidden text-center max-w-3xl mx-auto">
             <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/20 blur-3xl" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-kahoot-blue/20 blur-3xl" />
             <h2 className="text-3xl sm:text-4xl font-black mb-4 tracking-tight relative z-10">Ready to Start?</h2>

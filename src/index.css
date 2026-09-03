@@ -1,84 +1,85 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #46178f;
-  --color-primary-light: #7b2cbf;
-  --color-primary-dark: #2d0a5e;
+  --color-primary: #6d28d9;
+  --color-primary-light: #8b5cf6;
+  --color-primary-dark: #4c1d95;
   --color-kahoot-red: #e21b3c;
-  --color-kahoot-blue: #1368ce;
-  --color-kahoot-yellow: #d89e00;
-  --color-kahoot-green: #26890c;
-  --color-kahoot-red-light: #ff4d6a;
-  --color-kahoot-blue-light: #4d9aff;
-  --color-kahoot-yellow-light: #ffc940;
-  --color-kahoot-green-light: #4cd137;
-  --color-bg-dark: #0a0d1a;
-  --color-bg-card: rgba(255, 255, 255, 0.04);
-  --color-bg-card-hover: rgba(255, 255, 255, 0.08);
+  --color-kahoot-blue: #1d6ff2;
+  --color-kahoot-yellow: #f5a800;
+  --color-kahoot-green: #2eb82e;
+  --color-kahoot-red-light: #ff5c75;
+  --color-kahoot-blue-light: #5b9dff;
+  --color-kahoot-yellow-light: #ffc93d;
+  --color-kahoot-green-light: #57e657;
+  --color-bg-dark: #131a2e;
+  --color-bg-card: rgba(255, 255, 255, 0.05);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.09);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   min-height: 100vh;
   background: var(--color-bg-dark);
-  background-image: 
-    radial-gradient(ellipse at 15% 30%, rgba(70, 23, 143, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 15%, rgba(19, 104, 206, 0.08) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 80%, rgba(38, 137, 12, 0.04) 0%, transparent 40%);
+  background-image:
+    radial-gradient(ellipse at 10% 20%, rgba(109, 40, 217, 0.25) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 10%, rgba(29, 111, 242, 0.2) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(226, 27, 60, 0.1) 0%, transparent 45%);
 }
 
-#root {
-  min-height: 100vh;
-}
+#root { min-height: 100vh; }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(2deg); }
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-14px) rotate(3deg); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(70, 23, 143, 0.3), 0 0 60px rgba(70, 23, 143, 0.1); }
-  50% { box-shadow: 0 0 40px rgba(70, 23, 143, 0.5), 0 0 80px rgba(70, 23, 143, 0.2); }
+  0%, 100% { box-shadow: 0 0 25px rgba(109, 40, 217, 0.4), 0 0 70px rgba(109, 40, 217, 0.15); }
+  50% { box-shadow: 0 0 45px rgba(139, 92, 246, 0.6), 0 0 90px rgba(29, 111, 242, 0.25); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes rainbow-text {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-@keyframes count-pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.08); opacity: 0.85; }
+@keyframes pop-in {
+  0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-pop { animation: pop-in 0.3s ease-out; }
+
+/* Vibrant rainbow gradient text */
+.rainbow-text {
+  background: linear-gradient(90deg, #ff5c75, #ffc93d, #57e657, #5b9dff, #8b5cf6, #ff5c75);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-text 6s linear infinite;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
-
-.animate-count-pulse {
-  animation: count-pulse 1s ease-in-out infinite;
-}
-
+/* Kahoot primary gradient */
 .kahoot-gradient {
-  background: linear-gradient(135deg, #46178f 0%, #7b2cbf 50%, #1368ce 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 35%, #1d6ff2 100%);
 }
 
+/* Warm gradient for CTAs */
 .kahoot-gradient-warm {
-  background: linear-gradient(135deg, #e21b3c 0%, #d89e00 50%, #26890c 100%);
+  background: linear-gradient(135deg, #ff5c75 0%, #ff8c42 50%, #ffc93d 100%);
+}
+
+/* Green gradient */
+.kahoot-gradient-green {
+  background: linear-gradient(135deg, #2eb82e 0%, #57e657 100%);
 }
 
 .text-gradient {
@@ -88,24 +89,32 @@ body {
   background-clip: text;
 }
 
-.text-gradient-warm {
-  background: linear-gradient(135deg, #ff4d6a 0%, #ffc940 50%, #4cd137 100%);
+.text-gradient-blue {
+  background: linear-gradient(135deg, #5b9dff 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .card-glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .card-glass:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
+
+/* Colored card variants */
+.card-red { border-top: 3px solid #ff5c75; }
+.card-blue { border-top: 3px solid #5b9dff; }
+.card-yellow { border-top: 3px solid #ffc93d; }
+.card-green { border-top: 3px solid #57e657; }
+.card-purple { border-top: 3px solid #8b5cf6; }
 
 .game-btn {
   position: relative;
@@ -116,34 +125,53 @@ body {
 .game-btn:hover {
   transform: translateY(-3px);
   filter: brightness(1.15);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-.game-btn:active {
-  transform: translateY(0);
-  filter: brightness(0.95);
+.game-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+.timer-ring { transition: stroke-dashoffset 0.25s linear; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+input:focus, textarea:focus, select:focus { outline: none; }
+
+/* Consistent page container */
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 7rem 1.5rem 4rem;
 }
 
-.timer-ring {
-  transition: stroke-dashoffset 0.25s linear;
+/* Consistent section spacing */
+.section-spacing { padding: 5rem 0; }
+
+/* Card grid alignment */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* Input base */
+.input-base {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* Focus rings */
-input:focus, textarea:focus, select:focus {
-  outline: none;
+.input-base:focus {
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
+
+.input-base::placeholder { color: rgba(255, 255, 255, 0.2); }

@@ -73,7 +73,7 @@ export default function AdminGame() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-6 max-w-4xl mx-auto">
+    <div className="min-h-screen flex flex-col px-6 py-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <span className="text-xs text-white/30 uppercase tracking-wider">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
         <span className="text-sm text-white/50">

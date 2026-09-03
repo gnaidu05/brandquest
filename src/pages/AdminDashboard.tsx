@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-6 pt-28 pb-16">
+      <div className="page-container">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight">My Quizzes</h1>
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
-                  className="card-glass rounded-2xl overflow-hidden group"
+                  className={`card-glass rounded-2xl overflow-hidden group ${["card-red", "card-blue", "card-yellow", "card-green", "card-purple"][i % 5]}`}
                 >
                   <div className="h-36 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: quiz.cover_color + "22" }}>
                     <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at 30% 50%, ${quiz.cover_color}, transparent 70%)` }} />

@@ -102,7 +102,7 @@ export default function PlayGame() {
   const myScore = players.find((p) => p.id === playerId)?.score ?? 0;
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-6 max-w-3xl mx-auto">
+    <div className="min-h-screen flex flex-col px-6 py-10 max-w-3xl mx-auto">
       <ScorePopup show={showPopup} correct={popupData.correct} points={popupData.points} streak={popupData.streak} />
 
       <div className="flex items-center justify-between mb-5">

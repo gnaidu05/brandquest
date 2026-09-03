@@ -55,7 +55,7 @@ export default function CreateQuiz() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-6 pt-28 pb-16">
+      <div className="page-container max-w-5xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <button onClick={() => navigate("/admin")} className="text-white/40 hover:text-white transition-colors mb-4 flex items-center gap-1.5 text-sm">← Back to Dashboard</button>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Create New Quiz</h1>

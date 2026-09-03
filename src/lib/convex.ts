@@ -1,5 +1,7 @@
 import { ConvexReactClient } from "convex/react";
 
-export const convex = new ConvexReactClient(
-  import.meta.env.VITE_CONVEX_URL as string
-);
+const url = import.meta.env.VITE_CONVEX_URL;
+
+export const convex = url
+  ? new ConvexReactClient(url)
+  : null;

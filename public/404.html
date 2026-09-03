@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>QuizPlay</title>
+  <script>
+    // GitHub Pages SPA routing: redirect 404s to index with the path as a query param
+    var repo = '/brandquest';
+    var path = window.location.pathname;
+    if (path.indexOf(repo) === 0) {
+      path = path.substring(repo.length);
+    }
+    var search = window.location.search || '';
+    window.location.replace(repo + '/#' + path + search);
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>

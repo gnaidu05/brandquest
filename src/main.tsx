@@ -6,20 +6,12 @@ import { convex } from "./lib/convex";
 import App from "./App";
 import "./index.css";
 
-function Root() {
-  const content = (
-    <HashRouter>
-      <App />
-    </HashRouter>
-  );
-  if (convex) {
-    return <ConvexProvider client={convex}>{content}</ConvexProvider>;
-  }
-  return <>{content}</>;
-}
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Root />
+    <ConvexProvider client={convex}>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </ConvexProvider>
   </StrictMode>
 );

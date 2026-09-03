@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { listQuizzes, deleteQuiz, createGameWithHost, type Quiz } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 
@@ -15,22 +14,29 @@ export default function AdminDashboard() {
     return id;
   });
 
-  const quizzes = useQuery(api.quizzes.list, { authorId }) ?? [];
-  const deleteQuiz = useMutation(api.quizzes.remove);
-  const createWithHost = useMutation(api.games.createWithHost);
-
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
   const [startingGame, setStartingGame] = useState<string | null>(null);
   const [hostName, setHostName] = useState("");
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    listQuizzes(authorId)
+      .then(setQuizzes)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [authorId]);
+
+  const handleDelete = async (id: string) => {
+    await deleteQuiz(id);
+    setQuizzes((prev) => prev.filter((q) => q.id !== id));
+  };
 
   const startGameForQuiz = async (quizId: string) => {
     if (!hostName.trim() || creating) return;
     setCreating(true);
     try {
-      const result = await createWithHost({
-        quizId: quizId as any,
-        hostName: hostName.trim(),
-      });
+      const result = await createGameWithHost(quizId, hostName.trim());
       localStorage.setItem(`quizplay_player_${result.gameId}`, result.playerId);
       navigate(`/game/${result.gameId}`);
     } catch (e) {
@@ -43,7 +49,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -52,7 +57,7 @@ export default function AdminDashboard() {
         >
           <div>
             <h1 className="text-3xl font-bold">My Quizzes</h1>
-            <p className="text-white/50 mt-1">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} created</p>
+            <p className="text-white/50 mt-1">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""}</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -60,11 +65,13 @@ export default function AdminDashboard() {
             onClick={() => navigate("/admin/create")}
             className="px-6 py-3 rounded-xl kahoot-gradient font-bold flex items-center gap-2"
           >
-            <span className="text-lg">+</span> New Quiz
+            + New Quiz
           </motion.button>
         </motion.div>
 
-        {quizzes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-white/50">Loading...</div>
+        ) : quizzes.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -73,8 +80,7 @@ export default function AdminDashboard() {
             <div className="text-6xl mb-6">📝</div>
             <h2 className="text-2xl font-bold mb-3">No quizzes yet</h2>
             <p className="text-white/50 mb-6 max-w-md mx-auto">
-              Create your first quiz to start hosting interactive game sessions
-              with your audience.
+              Create your first quiz to start hosting interactive game sessions.
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -90,7 +96,7 @@ export default function AdminDashboard() {
             <AnimatePresence>
               {quizzes.map((quiz, i) => (
                 <motion.div
-                  key={quiz._id}
+                  key={quiz.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
@@ -99,29 +105,24 @@ export default function AdminDashboard() {
                 >
                   <div
                     className="h-32 flex items-center justify-center"
-                    style={{ backgroundColor: quiz.coverColor + "33" }}
+                    style={{ backgroundColor: quiz.cover_color + "33" }}
                   >
-                    <span
-                      className="text-5xl font-black opacity-50"
-                      style={{ color: quiz.coverColor }}
-                    >
+                    <span className="text-5xl font-black opacity-50" style={{ color: quiz.cover_color }}>
                       {quiz.title.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="p-5">
-                    <h3 className="text-lg font-bold mb-1 line-clamp-1">
-                      {quiz.title}
-                    </h3>
+                    <h3 className="text-lg font-bold mb-1 line-clamp-1">{quiz.title}</h3>
                     <p className="text-sm text-white/50 line-clamp-2 mb-4">
                       {quiz.description || "No description"}
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-white/40 bg-white/5 px-2 py-1 rounded-lg">
-                        {quiz.questionCount} question{quiz.questionCount !== 1 ? "s" : ""}
+                        {quiz.question_count} question{quiz.question_count !== 1 ? "s" : ""}
                       </span>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => deleteQuiz({ id: quiz._id })}
+                          onClick={() => handleDelete(quiz.id)}
                           className="text-xs text-white/40 hover:text-kahoot-red transition-colors px-2 py-1"
                         >
                           Delete
@@ -129,7 +130,7 @@ export default function AdminDashboard() {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => setStartingGame(quiz._id)}
+                          onClick={() => setStartingGame(quiz.id)}
                           className="text-sm px-4 py-1.5 rounded-lg bg-kahoot-green hover:bg-kahoot-green-light font-medium transition-colors"
                         >
                           Start Game
@@ -170,9 +171,7 @@ export default function AdminDashboard() {
                 placeholder="Your name (host)"
                 className="w-full bg-white/10 rounded-xl px-4 py-3 mb-6 outline-none focus:ring-2 focus:ring-primary placeholder:text-white/30 text-white"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && hostName.trim()) {
-                    startGameForQuiz(startingGame);
-                  }
+                  if (e.key === "Enter" && hostName.trim()) startGameForQuiz(startingGame);
                 }}
                 autoFocus
               />
@@ -188,7 +187,7 @@ export default function AdminDashboard() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => startGameForQuiz(startingGame)}
                   disabled={!hostName.trim() || creating}
-                  className="flex-1 px-4 py-3 rounded-xl kahoot-gradient font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 rounded-xl kahoot-gradient font-bold disabled:opacity-50"
                 >
                   {creating ? "Creating..." : "Start →"}
                 </motion.button>

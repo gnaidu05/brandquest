@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "convex": "^1.21.0",
+    "@supabase/supabase-js": "^2.114.0",
     "framer-motion": "^12.12.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

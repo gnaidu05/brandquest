@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPlayers, startGame, subscribeToPlayers, subscribeToGame, type Player } from "../lib/api";
+import { getGame, getPlayers, startGame, subscribeToPlayers, subscribeToGame, type Player } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const [players, setPlayers] = useState<Player[]>([]);
+  const [gamePin, setGamePin] = useState("");
   const [copied, setCopied] = useState(false);
 
   const hostPlayerId = localStorage.getItem(`quizplay_player_${gameId}`);
@@ -14,6 +15,9 @@ export default function Lobby() {
 
   useEffect(() => {
     if (!gameId) return;
+    // Fetch the actual PIN from the game record
+    getGame(gameId).then((g) => { if (g) setGamePin(g.pin); });
+
     const unsubGame = subscribeToGame(gameId, (game) => {
       if (game.status !== "lobby") {
         navigate(isHost ? `/game/${gameId}/host` : `/game/${gameId}/play`);
@@ -29,10 +33,17 @@ export default function Lobby() {
   };
 
   const copyPin = async () => {
-    // Extract pin from game - we need to get it from the game data
-    // For now copy the gameId as fallback
     try {
-      await navigator.clipboard.writeText(gameId || "");
+      await navigator.clipboard.writeText(gamePin);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard not available */ }
+  };
+
+  const copyLink = async () => {
+    try {
+      const url = `${window.location.origin}${window.location.pathname}#/join?pin=${gamePin}`;
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard not available */ }
@@ -55,14 +66,19 @@ export default function Lobby() {
             <p className="text-white/50 text-lg mb-2">Game PIN</p>
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-3">
               <div className="flex gap-2">
-                {gameId?.slice(-6).split("").map((digit, i) => (
+                {gamePin.split("").map((digit, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                     className="w-16 h-20 rounded-xl kahoot-gradient flex items-center justify-center text-3xl font-black">{digit}</motion.div>
                 ))}
               </div>
-              <button onClick={copyPin} className="ml-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-                {copied ? "✓" : "📋"}
-              </button>
+              <div className="flex flex-col gap-1 ml-3">
+                <button onClick={copyPin} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm" title="Copy PIN">
+                  {copied ? "✓" : "📋"} PIN
+                </button>
+                <button onClick={copyLink} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm" title="Copy invite link">
+                  🔗 Link
+                </button>
+              </div>
             </motion.div>
             {copied && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-kahoot-green text-sm mt-2">Copied!</motion.p>}
             <p className="text-white/30 text-sm mt-3">Share this PIN with players to join</p>

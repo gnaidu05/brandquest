@@ -22,10 +22,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    listQuizzes(authorId)
-      .then(setQuizzes)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    listQuizzes(authorId).then(setQuizzes).catch(console.error).finally(() => setLoading(false));
   }, [authorId]);
 
   const handleDelete = async (id: string) => {
@@ -36,12 +33,12 @@ export default function AdminDashboard() {
   const startGameForQuiz = async (quizId: string) => {
     if (!hostName.trim() || creating) return;
     setCreating(true);
+    setError("");
     try {
       const result = await createGameWithHost(quizId, hostName.trim());
       localStorage.setItem(`quizplay_player_${result.gameId}`, result.playerId);
       navigate(`/game/${result.gameId}`);
     } catch (e: any) {
-      console.error("Failed to create game:", e);
       setError(e?.message || String(e));
     } finally {
       setCreating(false);
@@ -51,81 +48,74 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 pt-24 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
+      <div className="max-w-6xl mx-auto px-6 pt-28 pb-16">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-bold">My Quizzes</h1>
-            <p className="text-white/50 mt-1">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""}</p>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">My Quizzes</h1>
+            <p className="text-white/40 mt-1.5">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} created</p>
           </div>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/admin/create")}
-            className="px-6 py-3 rounded-xl kahoot-gradient font-bold flex items-center gap-2"
+            className="px-6 py-3 rounded-xl kahoot-gradient font-bold flex items-center gap-2 shadow-lg shadow-primary/20"
           >
-            + New Quiz
+            <span className="text-lg">+</span> New Quiz
           </motion.button>
         </motion.div>
 
         {loading ? (
-          <div className="text-center py-16 text-white/50">Loading...</div>
+          <div className="text-center py-24 text-white/30">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            Loading quizzes...
+          </div>
         ) : quizzes.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-glass rounded-3xl p-16 text-center"
-          >
-            <div className="text-6xl mb-6">📝</div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-glass rounded-3xl p-16 text-center">
+            <div className="text-7xl mb-6">📝</div>
             <h2 className="text-2xl font-bold mb-3">No quizzes yet</h2>
-            <p className="text-white/50 mb-6 max-w-md mx-auto">
+            <p className="text-white/40 mb-8 max-w-md mx-auto leading-relaxed">
               Create your first quiz to start hosting interactive game sessions.
             </p>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/admin/create")}
-              className="px-8 py-3 rounded-xl kahoot-gradient font-bold"
+              className="px-8 py-3.5 rounded-xl kahoot-gradient font-bold shadow-lg shadow-primary/20"
             >
               Create Your First Quiz →
             </motion.button>
           </motion.div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence>
               {quizzes.map((quiz, i) => (
                 <motion.div
                   key={quiz.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
-                  className="card-glass rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
+                  className="card-glass rounded-2xl overflow-hidden group"
                 >
-                  <div
-                    className="h-32 flex items-center justify-center"
-                    style={{ backgroundColor: quiz.cover_color + "33" }}
-                  >
-                    <span className="text-5xl font-black opacity-50" style={{ color: quiz.cover_color }}>
+                  <div className="h-36 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: quiz.cover_color + "22" }}>
+                    <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at 30% 50%, ${quiz.cover_color}, transparent 70%)` }} />
+                    <span className="text-6xl font-black opacity-30 relative z-10" style={{ color: quiz.cover_color }}>
                       {quiz.title.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold mb-1 line-clamp-1">{quiz.title}</h3>
-                    <p className="text-sm text-white/50 line-clamp-2 mb-4">
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold mb-1.5 line-clamp-1">{quiz.title}</h3>
+                    <p className="text-sm text-white/35 line-clamp-2 mb-5 leading-relaxed">
                       {quiz.description || "No description"}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/40 bg-white/5 px-2 py-1 rounded-lg">
+                      <span className="text-xs text-white/30 bg-white/5 px-3 py-1.5 rounded-lg">
                         {quiz.question_count} question{quiz.question_count !== 1 ? "s" : ""}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDelete(quiz.id)}
-                          className="text-xs text-white/40 hover:text-kahoot-red transition-colors px-2 py-1"
+                          className="text-xs text-white/30 hover:text-kahoot-red transition-colors px-2 py-1"
                         >
                           Delete
                         </button>
@@ -133,7 +123,7 @@ export default function AdminDashboard() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setStartingGame(quiz.id)}
-                          className="text-sm px-4 py-1.5 rounded-lg bg-kahoot-green hover:bg-kahoot-green-light font-medium transition-colors"
+                          className="text-sm px-5 py-2 rounded-lg bg-kahoot-green hover:bg-kahoot-green-light font-medium transition-colors"
                         >
                           Start Game
                         </motion.button>
@@ -154,33 +144,36 @@ export default function AdminDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-6"
             onClick={() => setStartingGame(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="card-glass rounded-3xl p-8 w-full max-w-md"
+              className="card-glass rounded-3xl p-10 w-full max-w-md"
             >
-              <h2 className="text-2xl font-bold mb-2">Start Game</h2>
-              <p className="text-white/50 mb-6">Enter your name as the host</p>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl kahoot-gradient flex items-center justify-center">
+                  <span className="text-3xl">🎮</span>
+                </div>
+                <h2 className="text-2xl font-bold mb-1">Start Game</h2>
+                <p className="text-white/40 text-sm">Enter your name as the host</p>
+              </div>
               <input
                 type="text"
                 value={hostName}
                 onChange={(e) => setHostName(e.target.value)}
-                placeholder="Your name (host)"
-                className="w-full bg-white/10 rounded-xl px-4 py-3 mb-6 outline-none focus:ring-2 focus:ring-primary placeholder:text-white/30 text-white"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && hostName.trim()) startGameForQuiz(startingGame);
-                }}
+                placeholder="Your name"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-6 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 placeholder:text-white/20 text-white text-center text-lg"
+                onKeyDown={(e) => { if (e.key === "Enter" && hostName.trim()) startGameForQuiz(startingGame); }}
                 autoFocus
               />
               <div className="flex gap-3">
                 <button
                   onClick={() => setStartingGame(null)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-medium transition-colors"
+                  className="flex-1 px-4 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -189,12 +182,12 @@ export default function AdminDashboard() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => startGameForQuiz(startingGame)}
                   disabled={!hostName.trim() || creating}
-                  className="flex-1 px-4 py-3 rounded-xl kahoot-gradient font-bold disabled:opacity-50"
+                  className="flex-1 px-4 py-3.5 rounded-xl kahoot-gradient font-bold disabled:opacity-40 shadow-lg shadow-primary/20"
                 >
-              {creating ? "Creating..." : "Start →"}
-            </motion.button>
-          </div>
-          {error && <p className="text-kahoot-red text-sm mt-3 text-center">{error}</p>}
+                  {creating ? "Creating..." : "Start →"}
+                </motion.button>
+              </div>
+              {error && <p className="text-kahoot-red text-sm mt-4 text-center">{error}</p>}
             </motion.div>
           </motion.div>
         )}

@@ -15,92 +15,53 @@ export default function Lobby() {
 
   useEffect(() => {
     if (!gameId) return;
-    // Fetch the actual PIN from the game record
     getGame(gameId).then((g) => { if (g) setGamePin(g.pin); });
-
     const unsubGame = subscribeToGame(gameId, (game) => {
-      if (game.status !== "lobby") {
-        navigate(isHost ? `/game/${gameId}/host` : `/game/${gameId}/play`);
-      }
+      if (game.status !== "lobby") navigate(isHost ? `/game/${gameId}/host` : `/game/${gameId}/play`);
     });
     const unsubPlayers = subscribeToPlayers(gameId, setPlayers);
     return () => { unsubGame(); unsubPlayers(); };
   }, [gameId, navigate, isHost]);
 
-  const handleStartGame = async () => {
-    if (players.length < 1 || !gameId) return;
-    try { await startGame(gameId); } catch (e) { console.error(e); }
-  };
+  const handleStartGame = async () => { if (players.length < 1 || !gameId) return; try { await startGame(gameId); } catch (e) { console.error(e); } };
+  const copyPin = async () => { try { await navigator.clipboard.writeText(gamePin); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
+  const copyLink = async () => { try { await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#/join?pin=${gamePin}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
 
-  const copyPin = async () => {
-    try {
-      await navigator.clipboard.writeText(gamePin);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { /* clipboard not available */ }
-  };
-
-  const copyLink = async () => {
-    try {
-      const url = `${window.location.origin}${window.location.pathname}#/join?pin=${gamePin}`;
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { /* clipboard not available */ }
-  };
-
-  if (players.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (players.length === 0) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl">
-        <div className="card-glass rounded-3xl p-8 text-center">
-          <div className="mb-8">
-            <p className="text-white/50 text-lg mb-2">Game PIN</p>
-            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-3">
-              <div className="flex gap-2">
-                {gamePin.split("").map((digit, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="w-16 h-20 rounded-xl kahoot-gradient flex items-center justify-center text-3xl font-black">{digit}</motion.div>
-                ))}
-              </div>
-              <div className="flex flex-col gap-1 ml-3">
-                <button onClick={copyPin} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm" title="Copy PIN">
-                  {copied ? "✓" : "📋"} PIN
-                </button>
-                <button onClick={copyLink} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm" title="Copy invite link">
-                  🔗 Link
-                </button>
-              </div>
-            </motion.div>
-            {copied && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-kahoot-green text-sm mt-2">Copied!</motion.p>}
-            <p className="text-white/30 text-sm mt-3">Share this PIN with players to join</p>
+    <div className="min-h-screen flex items-center justify-center px-6 py-12">
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl">
+        <div className="card-glass rounded-3xl p-10 text-center">
+          <p className="text-white/40 text-sm uppercase tracking-widest mb-3">Game PIN</p>
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-2.5 mb-3">
+            {gamePin.split("").map((d, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl kahoot-gradient flex items-center justify-center text-2xl sm:text-3xl font-black shadow-lg shadow-primary/20">{d}</motion.div>
+            ))}
+          </motion.div>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <button onClick={copyPin} className="text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-colors">{copied ? "✓ Copied" : "📋 Copy PIN"}</button>
+            <button onClick={copyLink} className="text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-colors">🔗 Copy Link</button>
           </div>
+          <p className="text-white/25 text-xs mb-8">Share with players to join</p>
 
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-lg font-bold">Players</span>
-              <span className="px-2 py-0.5 rounded-full bg-primary/30 text-sm font-bold">{players.length}</span>
+              <span className="font-bold">Players</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-primary/20 text-xs font-bold">{players.length}</span>
             </div>
-            <div className="max-h-48 overflow-y-auto space-y-2">
+            <div className="max-h-48 overflow-y-auto space-y-1.5">
               <AnimatePresence>
-                {players.map((player, i) => (
-                  <motion.div key={player.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center font-bold text-sm">
-                      {player.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="font-medium flex-1 text-left">
-                      {player.name}
-                      {player.is_host && <span className="ml-2 text-xs text-kahoot-yellow">★ Host</span>}
-                    </span>
+                {players.map((p, i) => (
+                  <motion.div key={p.id} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center text-sm font-bold shrink-0">{p.name.charAt(0).toUpperCase()}</div>
+                    <span className="font-medium flex-1 text-left text-sm">{p.name}{p.is_host && <span className="ml-2 text-xs text-kahoot-yellow">★ Host</span>}</span>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -108,22 +69,21 @@ export default function Lobby() {
           </div>
 
           <div className="mb-8">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1.5">
               {[0, 1, 2].map((i) => (
-                <motion.div key={i} className="w-3 h-3 rounded-full bg-primary-light"
-                  animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} />
+                <motion.div key={i} className="w-2 h-2 rounded-full bg-primary-light" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} />
               ))}
             </div>
-            <p className="text-white/30 text-sm mt-2">Waiting for the host to start the game...</p>
+            <p className="text-white/25 text-xs mt-2">Waiting for host to start...</p>
           </div>
 
           {isHost ? (
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleStartGame}
-              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-xl font-bold shadow-lg shadow-primary/30">
-              Start Game with {players.length} Player{players.length !== 1 ? "s" : ""} 🚀
+            <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={handleStartGame}
+              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/25">
+              Start Game ({players.length} player{players.length !== 1 ? "s" : ""}) 🚀
             </motion.button>
           ) : (
-            <div className="text-center text-white/40">Only the host can start the game</div>
+            <p className="text-white/25 text-sm">Only the host can start</p>
           )}
         </div>
       </motion.div>

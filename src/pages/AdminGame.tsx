@@ -17,23 +17,13 @@ export default function AdminGame() {
 
   useEffect(() => {
     if (!gameId) return;
-    getGame(gameId).then((g) => {
-      setGame(g);
-      if (g) {
-        getQuestions(g.quiz_id).then(setQuestions);
-        getNonHostPlayers(g.id).then((ps) => setPlayerCount(ps.length));
-      }
-    });
+    getGame(gameId).then((g) => { setGame(g); if (g) { getQuestions(g.quiz_id).then(setQuestions); getNonHostPlayers(g.id).then((ps) => setPlayerCount(ps.length)); } });
     getLeaderboard(gameId).then(setLeaderboard);
   }, [gameId]);
 
   useEffect(() => {
     if (!gameId) return;
-    return subscribeToGame(gameId, (g) => {
-      setGame(g);
-      getLeaderboard(gameId).then(setLeaderboard);
-      getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length));
-    });
+    return subscribeToGame(gameId, (g) => { setGame(g); getLeaderboard(gameId).then(setLeaderboard); getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length)); });
   }, [gameId]);
 
   useEffect(() => {
@@ -41,64 +31,40 @@ export default function AdminGame() {
     return subscribeToAnswers(gameId, game.current_question_index, setAnswers);
   }, [gameId, game?.current_question_index, game?.status]);
 
-  useEffect(() => {
-    if (game?.status === "finished") navigate(`/game/${gameId}/results`);
-  }, [game?.status, gameId, navigate]);
+  useEffect(() => { if (game?.status === "finished") navigate(`/game/${gameId}/results`); }, [game?.status, gameId, navigate]);
 
-  const handleShowResults = async () => { if (game) await showResults(game.id); };
-  const handleNextQuestion = async () => { if (game) await nextQuestion(game.id); };
-
-  // Calculate elapsed time for synced timer
-  const getElapsedTime = (): number => {
-    if (!game?.question_start_time) return 0;
-    const start = new Date(game.question_start_time).getTime();
-    return (Date.now() - start) / 1000;
-  };
-
-  if (!game || !questions.length) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (!game || !questions.length) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
   const currentQuestion = questions[game.current_question_index];
   const isLastQuestion = game.current_question_index >= questions.length - 1;
-  const elapsed = getElapsedTime();
-  const timeLimit = currentQuestion?.time_limit ?? 20;
-  const remaining = Math.max(0, timeLimit - elapsed);
 
-  if (game.status === "lobby") {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="card-glass rounded-3xl p-8 text-center max-w-md w-full">
-          <div className="text-4xl mb-4">⏳</div>
-          <h2 className="text-2xl font-bold mb-2">Lobby</h2>
-          <p className="text-white/50 mb-4">Return to the lobby tab to start the game.</p>
-        </div>
+  if (game.status === "lobby") return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="card-glass rounded-3xl p-10 text-center max-w-sm w-full">
+        <div className="text-5xl mb-4">⏳</div>
+        <h2 className="text-2xl font-bold mb-2">Lobby</h2>
+        <p className="text-white/40 text-sm">Go back to the lobby tab to start.</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   if (game.status === "showingResults") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-2xl">
-          <div className="card-glass rounded-3xl p-8">
-            <h2 className="text-3xl font-bold text-center mb-6 text-gradient">Question Results</h2>
+      <div className="min-h-screen flex items-center justify-center px-6 py-12">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-2xl">
+          <div className="card-glass rounded-3xl p-10">
+            <h2 className="text-3xl font-black text-center mb-6 text-gradient tracking-tight">Question Results</h2>
             {currentQuestion && (
               <div className="text-center mb-6">
-                <p className="text-white/50 text-sm mb-2">Correct answer:</p>
+                <p className="text-white/40 text-sm mb-2">Correct answer:</p>
                 <p className="text-xl font-bold text-kahoot-green">{currentQuestion.options[currentQuestion.correct_index]}</p>
-                <p className="text-sm text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} answered correctly</p>
+                <p className="text-xs text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
               </div>
             )}
             <div className="mb-6"><Leaderboard entries={leaderboard} /></div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? handleShowResults : handleNextQuestion}
-              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-xl font-bold">
-              {isLastQuestion ? "See Final Results 🏆" : `Next Question → (${game.current_question_index + 2} of ${questions.length})`}
+            <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? async () => { if (game) await showResults(game.id); } : async () => { if (game) await nextQuestion(game.id); }}
+              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/20">
+              {isLastQuestion ? "Final Results 🏆" : `Next Question → (${game.current_question_index + 2}/${questions.length})`}
             </motion.button>
           </div>
         </motion.div>
@@ -107,41 +73,38 @@ export default function AdminGame() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-white/40">Question {(game.current_question_index ?? 0) + 1} of {questions.length}</div>
-        <div className="text-sm text-white/40">
-          Answers: <span className="text-white font-bold">{answers.length}</span>
-          <span className="text-white/30"> / {playerCount}</span>
-        </div>
+    <div className="min-h-screen flex flex-col px-6 py-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-xs text-white/30 uppercase tracking-wider">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
+        <span className="text-sm text-white/50">
+          <span className="text-white font-bold">{answers.length}</span> / {playerCount} answered
+        </span>
       </div>
 
-      <div className="flex justify-center mb-4">
-        <CountdownTimer duration={timeLimit} onTimeUp={() => {}} isActive={game.status === "question"} size={80} startTime={game.question_start_time} />
+      <div className="flex justify-center mb-5">
+        <CountdownTimer duration={currentQuestion?.time_limit ?? 20} onTimeUp={() => {}} isActive={game.status === "question"} size={80} startTime={game.question_start_time} />
       </div>
 
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <div className="card-glass rounded-3xl p-6 mb-4">
-          <h2 className="text-xl md:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          {currentQuestion?.options.map((option, i) => {
-            const count = answers.filter((a) => a.selected_option === i).length;
-            const isCorrect = i === currentQuestion.correct_index;
-            return (
-              <div key={i} className={`p-3 rounded-xl flex items-center gap-3 ${isCorrect ? "bg-kahoot-green/20 ring-1 ring-kahoot-green/30" : "bg-white/5"}`}>
-                <AnswerButton text="" index={i} variant="icon" disabled />
-                <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{option}</div></div>
-                <div className="text-xl font-bold tabular-nums">{count}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleShowResults}
-          className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-xl font-bold">Show Results 📊</motion.button>
+      <div className="card-glass rounded-2xl p-7 mb-5">
+        <h2 className="text-xl sm:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
       </div>
+
+      <div className="grid grid-cols-2 gap-2.5 mb-6">
+        {currentQuestion?.options.map((option, i) => {
+          const count = answers.filter((a) => a.selected_option === i).length;
+          const isCorrect = i === currentQuestion.correct_index;
+          return (
+            <div key={i} className={`p-4 rounded-xl flex items-center gap-3 ${isCorrect ? "bg-kahoot-green/15 ring-1 ring-kahoot-green/25" : "bg-white/[0.03]"}`}>
+              <AnswerButton text="" index={i} variant="icon" disabled />
+              <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate text-white/70">{option}</div></div>
+              <div className="text-xl font-bold tabular-nums text-white/90">{count}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id); }}
+        className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/20">Show Results 📊</motion.button>
     </div>
   );
 }

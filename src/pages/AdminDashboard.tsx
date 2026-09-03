@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [startingGame, setStartingGame] = useState<string | null>(null);
   const [hostName, setHostName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     listQuizzes(authorId)
@@ -39,8 +40,9 @@ export default function AdminDashboard() {
       const result = await createGameWithHost(quizId, hostName.trim());
       localStorage.setItem(`quizplay_player_${result.gameId}`, result.playerId);
       navigate(`/game/${result.gameId}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to create game:", e);
+      setError(e?.message || String(e));
     } finally {
       setCreating(false);
     }
@@ -189,9 +191,10 @@ export default function AdminDashboard() {
                   disabled={!hostName.trim() || creating}
                   className="flex-1 px-4 py-3 rounded-xl kahoot-gradient font-bold disabled:opacity-50"
                 >
-                  {creating ? "Creating..." : "Start →"}
-                </motion.button>
-              </div>
+              {creating ? "Creating..." : "Start →"}
+            </motion.button>
+          </div>
+          {error && <p className="text-kahoot-red text-sm mt-3 text-center">{error}</p>}
             </motion.div>
           </motion.div>
         )}

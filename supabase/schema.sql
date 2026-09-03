@@ -24,7 +24,7 @@ CREATE TABLE questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
-  options TEXT[] NOT NULL,
+  options JSONB NOT NULL,
   correct_index INTEGER NOT NULL,
   time_limit INTEGER DEFAULT 20,
   sort_order INTEGER DEFAULT 0
@@ -88,11 +88,11 @@ ALTER TABLE players ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answers ENABLE ROW LEVEL SECURITY;
 
 -- Policies: allow all operations (public app, no auth required)
-CREATE POLICY "Allow all" ON quizzes FOR ALL USING (true);
-CREATE POLICY "Allow all" ON questions FOR ALL USING (true);
-CREATE POLICY "Allow all" ON games FOR ALL USING (true);
-CREATE POLICY "Allow all" ON players FOR ALL USING (true);
-CREATE POLICY "Allow all" ON answers FOR ALL USING (true);
+CREATE POLICY "Allow all" ON quizzes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON questions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON games FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON players FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON answers FOR ALL USING (true) WITH CHECK (true);
 
 -- Enable realtime for game tables
 ALTER PUBLICATION supabase_realtime ADD TABLE games;

@@ -28,7 +28,7 @@ export default function Landing() {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-16 overflow-hidden">
         <div className="absolute top-24 left-[8%] w-28 h-28 rounded-full bg-kahoot-red/20 blur-2xl animate-float" />
         <div className="absolute top-1/3 right-[10%] w-24 h-24 rounded-full bg-kahoot-blue/20 blur-2xl animate-float" style={{ animationDelay: "1s" }} />
         <div className="absolute bottom-1/4 left-[15%] w-20 h-20 rounded-full bg-kahoot-yellow/20 blur-2xl animate-float" style={{ animationDelay: "2s" }} />
@@ -111,7 +111,7 @@ export default function Landing() {
       </section>
 
       {/* FEATURES */}
-      <section className="py-24 px-6 bg-white/[0.02]">
+      <section className="py-28 px-6 bg-white/[0.02]">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -148,7 +148,7 @@ export default function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-24 px-6">
+      <section className="py-28 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -188,7 +188,7 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6">
+      <section className="py-28 px-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}

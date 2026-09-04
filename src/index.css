@@ -17,7 +17,9 @@
   --color-bg-card-hover: rgba(255, 255, 255, 0.09);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* Tailwind Preflight already zeroes margins and sets border-box sizing.
+   A universal reset here would be *unlayered* CSS, which in Tailwind v4 wins
+   over every layered utility and silently kills p-*, m-*, and mx-auto. */
 
 html { scroll-behavior: smooth; }
 
@@ -53,125 +55,152 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
-.animate-pop { animation: pop-in 0.3s ease-out; }
+@layer components {
+  .animate-float { animation: float 4s ease-in-out infinite; }
+  .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+  .animate-pop { animation: pop-in 0.3s ease-out; }
 
-/* Vibrant rainbow gradient text */
-.rainbow-text {
-  background: linear-gradient(90deg, #ff5c75, #ffc93d, #57e657, #5b9dff, #8b5cf6, #ff5c75);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rainbow-text 6s linear infinite;
+  /* Vibrant rainbow gradient text */
+  .rainbow-text {
+    background: linear-gradient(90deg, #ff5c75, #ffc93d, #57e657, #5b9dff, #8b5cf6, #ff5c75);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-text 6s linear infinite;
+  }
+
+  /* Kahoot primary gradient */
+  .kahoot-gradient {
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 35%, #1d6ff2 100%);
+  }
+
+  /* Warm gradient for CTAs */
+  .kahoot-gradient-warm {
+    background: linear-gradient(135deg, #ff5c75 0%, #ff8c42 50%, #ffc93d 100%);
+  }
+
+  /* Green gradient */
+  .kahoot-gradient-green {
+    background: linear-gradient(135deg, #2eb82e 0%, #57e657 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #5b9dff 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+
+  .card-glass:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  }
+
+  /* Colored card variants */
+  .card-red { border-top: 3px solid #ff5c75; }
+  .card-blue { border-top: 3px solid #5b9dff; }
+  .card-yellow { border-top: 3px solid #ffc93d; }
+  .card-green { border-top: 3px solid #57e657; }
+  .card-purple { border-top: 3px solid #8b5cf6; }
+
+  .game-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .game-btn:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .game-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+  .timer-ring { transition: stroke-dashoffset 0.25s linear; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+  /* Drop the default ring only for mouse/touch focus — keyboard users keep a
+   visible focus indicator. */
+@layer base {
+  input:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible),
+  select:focus:not(:focus-visible) { outline: none; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: 2px;
+  }
 }
 
-/* Kahoot primary gradient */
-.kahoot-gradient {
-  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 35%, #1d6ff2 100%);
+  /* Consistent page container */
+  .page-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 7rem 1.5rem 4rem;
+  }
+
+  /* Consistent section spacing */
+  .section-spacing { padding: 5rem 0; }
+
+  /* Card grid alignment */
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+
+  /* Input base */
+  .input-base {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-base:focus {
+    border-color: rgba(139, 92, 246, 0.6);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  }
+
+  .input-base::placeholder { color: rgba(255, 255, 255, 0.2); }
 }
+/* Respect the OS "reduce motion" setting: keep the layout, drop the looping
+   ambient animation and long transitions. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 
-/* Warm gradient for CTAs */
-.kahoot-gradient-warm {
-  background: linear-gradient(135deg, #ff5c75 0%, #ff8c42 50%, #ffc93d 100%);
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-
-/* Green gradient */
-.kahoot-gradient-green {
-  background: linear-gradient(135deg, #2eb82e 0%, #57e657 100%);
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-blue {
-  background: linear-gradient(135deg, #5b9dff 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.card-glass {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-}
-
-.card-glass:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.09);
-}
-
-/* Colored card variants */
-.card-red { border-top: 3px solid #ff5c75; }
-.card-blue { border-top: 3px solid #5b9dff; }
-.card-yellow { border-top: 3px solid #ffc93d; }
-.card-green { border-top: 3px solid #57e657; }
-.card-purple { border-top: 3px solid #8b5cf6; }
-
-.game-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.game-btn:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.15);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.game-btn:active { transform: translateY(0); filter: brightness(0.95); }
-
-.timer-ring { transition: stroke-dashoffset 0.25s linear; }
-
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
-
-input:focus, textarea:focus, select:focus { outline: none; }
-
-/* Consistent page container */
-.page-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 7rem 1.5rem 4rem;
-}
-
-/* Consistent section spacing */
-.section-spacing { padding: 5rem 0; }
-
-/* Card grid alignment */
-.grid-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
-}
-
-/* Input base */
-.input-base {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.input-base:focus {
-  border-color: rgba(139, 92, 246, 0.6);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-.input-base::placeholder { color: rgba(255, 255, 255, 0.2); }

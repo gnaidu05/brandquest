@@ -35,7 +35,7 @@ CREATE INDEX idx_questions_quiz ON questions(quiz_id, sort_order);
 -- Games table
 CREATE TABLE games (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  quiz_id UUID NOT NULL REFERENCES quizzes(id),
+  quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   pin TEXT NOT NULL,
   host_id UUID,
   player_count INTEGER DEFAULT 1,
@@ -69,7 +69,7 @@ CREATE TABLE answers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_id UUID NOT NULL REFERENCES games(id) ON DELETE CASCADE,
   question_index INTEGER NOT NULL,
-  player_id UUID NOT NULL REFERENCES players(id),
+  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
   selected_option INTEGER NOT NULL,
   correct BOOLEAN NOT NULL,
   answer_time NUMERIC NOT NULL,

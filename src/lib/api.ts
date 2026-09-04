@@ -143,8 +143,19 @@ export async function createQuiz(
   return quiz.id;
 }
 
+/**
+ * Deletes a quiz and everything hanging off it.
+ *
+ * `questions.quiz_id` cascades, but `games.quiz_id` does not, so a quiz that
+ * has ever been hosted cannot be removed by deleting the quiz row alone — the
+ * request fails on games_quiz_id_fkey. Its games go first; players and answers
+ * cascade from those. supabase/fix4.sql adds the missing constraint, and this
+ * stays correct either way.
+ */
 export async function deleteQuiz(id: string): Promise<void> {
-  // Questions cascade-delete via FK
+  const { error: gamesError } = await supabase.from("games").delete().eq("quiz_id", id);
+  if (gamesError) throw gamesError;
+
   const { error } = await supabase.from("quizzes").delete().eq("id", id);
   if (error) throw error;
 }

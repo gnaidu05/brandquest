@@ -28,7 +28,7 @@ export default function ScorePopup({
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 10 }}
               className={`text-6xl font-black mb-2 ${
-                correct ? "text-kahoot-green" : "text-kahoot-red"
+                correct ? "text-teal-500" : "text-rose-500"
               }`}
             >
               {correct ? "✓ Correct!" : "✗ Incorrect"}
@@ -38,7 +38,7 @@ export default function ScorePopup({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-3xl font-bold text-kahoot-yellow"
+                className="text-3xl font-bold text-amber-500"
               >
                 +{points.toLocaleString()} pts
                 {streak >= 3 && (

@@ -58,7 +58,7 @@ export default function AdminDashboard() {
             whileHover={{ scale: 1.03, y: -1 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/admin/create")}
-            className="px-6 py-3 rounded-xl kahoot-gradient font-bold flex items-center gap-2 shadow-lg shadow-primary/20"
+            className="px-6 py-3 rounded-xl brand-gradient font-bold flex items-center gap-2 shadow-lg shadow-primary/20"
           >
             <span className="text-lg">+</span> New Quiz
           </motion.button>
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
               whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/admin/create")}
-              className="px-8 py-3.5 rounded-xl kahoot-gradient font-bold shadow-lg shadow-primary/20"
+              className="px-8 py-3.5 rounded-xl brand-gradient font-bold shadow-lg shadow-primary/20"
             >
               Create Your First Quiz →
             </motion.button>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDelete(quiz.id)}
-                          className="text-xs text-white/30 hover:text-kahoot-red transition-colors px-2 py-1"
+                          className="text-xs text-white/30 hover:text-rose-500 transition-colors px-2 py-1"
                         >
                           Delete
                         </button>
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setStartingGame(quiz.id)}
-                          className="text-sm px-5 py-2 rounded-lg bg-kahoot-green hover:bg-kahoot-green-light font-medium transition-colors"
+                          className="text-sm px-5 py-2 rounded-lg bg-teal-500 hover:bg-teal-300 font-medium transition-colors"
                         >
                           Start Game
                         </motion.button>
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
               className="card-glass rounded-3xl p-10 w-full max-w-md"
             >
               <div className="text-center mb-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl kahoot-gradient flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl brand-gradient flex items-center justify-center">
                   <span className="text-3xl">🎮</span>
                 </div>
                 <h2 className="text-2xl font-bold mb-1">Start Game</h2>
@@ -182,12 +182,12 @@ export default function AdminDashboard() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => startGameForQuiz(startingGame)}
                   disabled={!hostName.trim() || creating}
-                  className="flex-1 px-4 py-3.5 rounded-xl kahoot-gradient font-bold disabled:opacity-40 shadow-lg shadow-primary/20"
+                  className="flex-1 px-4 py-3.5 rounded-xl brand-gradient font-bold disabled:opacity-40 shadow-lg shadow-primary/20"
                 >
                   {creating ? "Creating..." : "Start →"}
                 </motion.button>
               </div>
-              {error && <p className="text-kahoot-red text-sm mt-4 text-center">{error}</p>}
+              {error && <p className="text-rose-500 text-sm mt-4 text-center">{error}</p>}
             </motion.div>
           </motion.div>
         )}

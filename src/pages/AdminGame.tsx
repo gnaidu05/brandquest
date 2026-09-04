@@ -57,13 +57,13 @@ export default function AdminGame() {
             {currentQuestion && (
               <div className="text-center mb-6">
                 <p className="text-white/40 text-sm mb-2">Correct answer:</p>
-                <p className="text-xl font-bold text-kahoot-green">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                <p className="text-xl font-bold text-teal-500">{currentQuestion.options[currentQuestion.correct_index]}</p>
                 <p className="text-xs text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
               </div>
             )}
             <div className="mb-6"><Leaderboard entries={leaderboard} /></div>
             <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? async () => { if (game) await showResults(game.id); } : async () => { if (game) await nextQuestion(game.id); }}
-              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/20">
+              className="w-full px-6 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/20">
               {isLastQuestion ? "Final Results 🏆" : `Next Question → (${game.current_question_index + 2}/${questions.length})`}
             </motion.button>
           </div>
@@ -94,7 +94,7 @@ export default function AdminGame() {
           const count = answers.filter((a) => a.selected_option === i).length;
           const isCorrect = i === currentQuestion.correct_index;
           return (
-            <div key={i} className={`p-4 rounded-xl flex items-center gap-3 ${isCorrect ? "bg-kahoot-green/15 ring-1 ring-kahoot-green/25" : "bg-white/[0.03]"}`}>
+            <div key={i} className={`p-4 rounded-xl flex items-center gap-3 ${isCorrect ? "bg-teal-500/15 ring-1 ring-teal-500/25" : "bg-white/[0.03]"}`}>
               <AnswerButton text="" index={i} variant="icon" disabled />
               <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate text-white/70">{option}</div></div>
               <div className="text-xl font-bold tabular-nums text-white/90">{count}</div>
@@ -104,7 +104,7 @@ export default function AdminGame() {
       </div>
 
       <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id); }}
-        className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/20">Show Results 📊</motion.button>
+        className="w-full px-6 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/20">Show Results 📊</motion.button>
     </div>
   );
 }

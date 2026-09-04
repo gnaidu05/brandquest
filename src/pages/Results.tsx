@@ -47,12 +47,12 @@ export default function Results() {
             {/* 1st */}
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col items-center w-32 sm:w-40">
               <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity }}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full kahoot-gradient flex items-center justify-center text-3xl sm:text-4xl font-black mb-2 ring-4 ring-kahoot-yellow/40 shadow-xl shadow-primary/20">{podium[0].name.charAt(0)}</motion.div>
-              <p className="font-bold text-base sm:text-lg truncate w-full text-center text-kahoot-yellow">{podium[0].name}</p>
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full brand-gradient flex items-center justify-center text-3xl sm:text-4xl font-black mb-2 ring-4 ring-amber-500/40 shadow-xl shadow-primary/20">{podium[0].name.charAt(0)}</motion.div>
+              <p className="font-bold text-base sm:text-lg truncate w-full text-center text-amber-500">{podium[0].name}</p>
               <p className="text-white/40 text-sm mb-2">{podium[0].score.toLocaleString()}</p>
               <motion.div initial={{ height: 0 }} animate={{ height: 170 }} transition={{ delay: 0.5, duration: 0.5 }}
-                className="w-full rounded-t-xl bg-gradient-to-t from-kahoot-yellow/5 to-kahoot-yellow/15 flex items-center justify-center pb-2"><span className="text-4xl">🥇</span></motion.div>
-              <p className="text-xs text-kahoot-yellow/70 mt-1.5 font-medium">#1</p>
+                className="w-full rounded-t-xl bg-gradient-to-t from-amber-500/5 to-amber-500/15 flex items-center justify-center pb-2"><span className="text-4xl">🥇</span></motion.div>
+              <p className="text-xs text-amber-500/70 mt-1.5 font-medium">#1</p>
             </motion.div>
             {/* 3rd */}
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center w-28 sm:w-36">
@@ -70,7 +70,7 @@ export default function Results() {
         {rest.length > 0 && <div className="max-w-md mx-auto mb-12"><Leaderboard entries={rest} /></div>}
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }} className="text-center">
-          <button onClick={() => navigate("/")} className="px-10 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 transition-shadow">
+          <button onClick={() => navigate("/")} className="px-10 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 transition-shadow">
             Play Again 🎮
           </button>
         </motion.div>

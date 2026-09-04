@@ -83,7 +83,7 @@ export default function PlayGame() {
             <h2 className="text-2xl font-bold text-center mb-6 text-gradient">Question Results</h2>
             <div className="text-center mb-6">
               <p className="text-white/40 text-sm mb-2">Correct answer:</p>
-              <p className="text-lg font-bold text-kahoot-green">{currentQuestion.options[currentQuestion.correct_index]}</p>
+              <p className="text-lg font-bold text-teal-500">{currentQuestion.options[currentQuestion.correct_index]}</p>
               <p className="text-xs text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
             </div>
             <Leaderboard entries={leaderboard} compact />

@@ -9,11 +9,14 @@ interface AnswerButtonProps {
   variant?: "default" | "compact" | "icon";
 }
 
+// Each option carries a shape as well as a colour, so the four stay
+// distinguishable without relying on colour alone. `fg` keeps text legible on
+// the lighter fills — near-white on amber reads at roughly 2:1.
 const COLORS = [
-  { bg: "bg-kahoot-red", hover: "hover:brightness-110", icon: "▲" },
-  { bg: "bg-kahoot-blue", hover: "hover:brightness-110", icon: "◆" },
-  { bg: "bg-kahoot-yellow", hover: "hover:brightness-110", icon: "●" },
-  { bg: "bg-kahoot-green", hover: "hover:brightness-110", icon: "■" },
+  { bg: "bg-rose-500", fg: "text-white", hover: "hover:brightness-110", icon: "▲" },
+  { bg: "bg-indigo-500", fg: "text-white", hover: "hover:brightness-110", icon: "◆" },
+  { bg: "bg-amber-500", fg: "text-amber-950", hover: "hover:brightness-110", icon: "●" },
+  { bg: "bg-teal-500", fg: "text-teal-950", hover: "hover:brightness-110", icon: "■" },
 ];
 
 export default function AnswerButton({
@@ -33,7 +36,7 @@ export default function AnswerButton({
         whileTap={!disabled ? { scale: 0.95 } : undefined}
         onClick={onClick}
         disabled={disabled}
-        className={`w-16 h-16 rounded-2xl ${color.bg} flex items-center justify-center text-2xl font-bold transition-all ${
+        className={`w-16 h-16 rounded-2xl ${color.bg} ${color.fg} flex items-center justify-center text-2xl font-bold transition-all ${
           selected ? "ring-4 ring-white scale-105" : ""
         } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
       >
@@ -49,7 +52,7 @@ export default function AnswerButton({
         whileTap={!disabled ? { scale: 0.98 } : undefined}
         onClick={onClick}
         disabled={disabled}
-        className={`flex items-center gap-3 p-3 rounded-xl ${color.bg} transition-all text-left ${
+        className={`flex items-center gap-3 p-3 rounded-xl ${color.bg} ${color.fg} transition-all text-left ${
           selected ? "ring-4 ring-white" : ""
         } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
       >
@@ -67,7 +70,7 @@ export default function AnswerButton({
       whileTap={!disabled ? { scale: 0.97 } : undefined}
       onClick={onClick}
       disabled={disabled}
-      className={`game-btn flex items-center gap-4 p-5 rounded-2xl ${color.bg} transition-all ${
+      className={`game-btn flex items-center gap-4 p-5 rounded-2xl ${color.bg} ${color.fg} transition-all ${
         selected ? "ring-4 ring-white" : ""
       } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${color.hover}`}
     >

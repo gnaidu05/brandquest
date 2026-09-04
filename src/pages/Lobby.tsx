@@ -41,7 +41,7 @@ export default function Lobby() {
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-2.5 mb-3">
             {gamePin.split("").map((d, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl kahoot-gradient flex items-center justify-center text-2xl sm:text-3xl font-black shadow-lg shadow-primary/20">{d}</motion.div>
+                className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl brand-gradient flex items-center justify-center text-2xl sm:text-3xl font-black shadow-lg shadow-primary/20">{d}</motion.div>
             ))}
           </motion.div>
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -61,7 +61,7 @@ export default function Lobby() {
                   <motion.div key={p.id} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center text-sm font-bold shrink-0">{p.name.charAt(0).toUpperCase()}</div>
-                    <span className="font-medium flex-1 text-left text-sm">{p.name}{p.is_host && <span className="ml-2 text-xs text-kahoot-yellow">★ Host</span>}</span>
+                    <span className="font-medium flex-1 text-left text-sm">{p.name}{p.is_host && <span className="ml-2 text-xs text-amber-500">★ Host</span>}</span>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -79,7 +79,7 @@ export default function Lobby() {
 
           {isHost ? (
             <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={handleStartGame}
-              className="w-full px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold shadow-xl shadow-primary/25">
+              className="w-full px-6 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/25">
               Start Game ({players.length} player{players.length !== 1 ? "s" : ""}) 🚀
             </motion.button>
           ) : (

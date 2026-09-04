@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppError, getGameByPin, joinGame } from "../lib/api";
 import { motion } from "framer-motion";
+import { ArrowRightIcon, CheckIcon, KeyIcon, LogoMark } from "../components/Icons";
 
 /** Where the PIN lookup stands. `failed` is the only retryable state. */
 type Lookup =
@@ -130,40 +131,36 @@ export default function JoinGame() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-[10%] w-40 h-40 rounded-full bg-kahoot-red/8 blur-2xl animate-float" />
-        <div className="absolute top-40 right-[15%] w-32 h-32 rounded-full bg-kahoot-blue/8 blur-2xl animate-float" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 rounded-full bg-kahoot-yellow/8 blur-2xl animate-float" style={{ animationDelay: "2s" }} />
-      </div>
+      <div className="pointer-events-none fixed inset-0 bg-grid" aria-hidden="true" />
 
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
         <button
           onClick={() => navigate("/")}
-          className={`text-white/50 hover:text-white transition-colors mb-6 flex items-center gap-1 text-sm rounded-lg ${focusRing}`}
+          className={`mb-6 inline-flex items-center gap-2 rounded-lg text-sm text-slate-400 transition-colors hover:text-white ${focusRing}`}
         >
-          ← Back to Home
+          <ArrowRightIcon size={15} className="rotate-180" />
+          Back to home
         </button>
 
-        <div className="card-glass rounded-3xl p-10">
+        <div className="card rounded-2xl p-8 shadow-2xl shadow-black/40 sm:p-10">
           {step === "pin" ? (
             <>
               <div className="text-center mb-10">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 150, damping: 12 }}
-                  className="w-20 h-20 mx-auto mb-5 rounded-2xl kahoot-gradient flex items-center justify-center shadow-xl shadow-primary/20">
-                  <span className="text-4xl">🎮</span>
-                </motion.div>
-                <h1 className="text-3xl font-black mb-2 tracking-tight">Join a Game</h1>
-                <p className="text-white/60">Enter the 6-digit game PIN</p>
+                <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+                  <KeyIcon size={24} />
+                </span>
+                <h1 className="font-display mb-2 text-2xl font-bold tracking-tight text-white">Join a game</h1>
+                <p className="text-sm text-slate-400">Enter the six-digit PIN from your host</p>
               </div>
 
               <div className="flex justify-center gap-3 mb-8" aria-hidden="true">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <motion.div key={i} className={`w-14 h-16 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
                     pinError && pin.length > i
-                      ? "bg-kahoot-red/20 border-2 border-kahoot-red/50"
+                      ? "border-2 border-rose-400/50 bg-rose-500/15 text-white"
                       : pin.length > i
-                        ? "bg-primary/30 border-2 border-primary/50"
-                        : "bg-white/[0.03] border-2 border-white/5"
+                        ? "border-2 border-teal-400/50 bg-teal-500/15 text-white"
+                        : "border-2 border-white/8 bg-white/[0.02] text-slate-500"
                   }`}
                     animate={pin.length === i ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 1, repeat: Infinity }}>
                     {pin[i] || ""}
@@ -181,17 +178,17 @@ export default function JoinGame() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000" autoFocus maxLength={6}
-                className={`w-full bg-white/5 border rounded-xl px-5 py-4 text-center text-2xl font-mono tracking-[0.4em] outline-none focus:ring-1 placeholder:text-white/20 text-white ${
+                className={`w-full bg-white/5 border rounded-xl px-5 py-4 text-center text-2xl font-mono tracking-[0.4em] outline-none focus:ring-1 text-white placeholder:text-slate-600 ${
                   pinError
-                    ? "border-kahoot-red/60 focus:border-kahoot-red focus:ring-kahoot-red/30"
-                    : "border-white/10 focus:border-primary/50 focus:ring-primary/30"
+                    ? "border-rose-400/60 focus:border-rose-400 focus:ring-rose-400/30"
+                    : "border-white/12 focus:border-teal-400/60 focus:ring-teal-400/30"
                 }`}
               />
 
               <div id="pin-status" role="status" aria-live="polite" className="min-h-[1.75rem] mt-4 text-sm text-center">
-                {lookup.status === "checking" && <span className="text-white/60">Checking PIN…</span>}
+                {lookup.status === "checking" && <span className="text-slate-400">Checking PIN…</span>}
                 {pinError && (
-                  <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-kahoot-red-light">
+                  <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-rose-300">
                     {pinError}
                   </motion.p>
                 )}
@@ -202,7 +199,7 @@ export default function JoinGame() {
               {lookup.status === "failed" && (
                 <button
                   onClick={() => setAttempt((n) => n + 1)}
-                  className={`w-full mt-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold transition-colors ${focusRing}`}
+                  className={`w-full mt-2 px-5 py-3 rounded-xl btn-ghost font-semibold text-white ${focusRing}`}
                 >
                   Try again
                 </button>
@@ -211,12 +208,15 @@ export default function JoinGame() {
           ) : (
             <>
               <div className="text-center mb-10">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 150, damping: 12 }}
-                  className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-kahoot-green/20 border border-kahoot-green/30 flex items-center justify-center">
-                  <span className="text-4xl">✓</span>
-                </motion.div>
-                <h1 className="text-3xl font-black mb-2 tracking-tight">What's your name?</h1>
-                <p className="text-white/60">Other players will see this during the game</p>
+                <motion.span
+                  initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 16 }}
+                  className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-500/15 text-teal-300"
+                >
+                  <CheckIcon size={26} />
+                </motion.span>
+                <h1 className="font-display mb-2 text-2xl font-bold tracking-tight text-white">You're in — what's your name?</h1>
+                <p className="text-sm text-slate-400">Other players will see this on the leaderboard</p>
               </div>
 
               <input
@@ -226,12 +226,12 @@ export default function JoinGame() {
                 onChange={(e) => { setName(e.target.value); if (joinError) setJoinError(""); }}
                 placeholder="Your nickname" autoFocus maxLength={20}
                 onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) handleJoin(); }}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-xl text-center outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 placeholder:text-white/20 text-white mb-4"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-xl text-center outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 text-white placeholder:text-slate-600 mb-4"
               />
 
               <div role="alert" className="min-h-[1.5rem] mb-2 text-sm text-center">
                 {joinError && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-kahoot-red-light">
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-rose-300">
                     {joinError}
                   </motion.p>
                 )}
@@ -241,7 +241,7 @@ export default function JoinGame() {
                 <button
                   onClick={backToPin}
                   aria-label="Back to PIN entry"
-                  className={`px-5 py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors font-medium ${focusRing}`}
+                  className={`btn-ghost rounded-xl px-5 py-3.5 font-medium text-white ${focusRing}`}
                 >
                   ←
                 </button>
@@ -249,7 +249,7 @@ export default function JoinGame() {
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleJoin}
                   disabled={!name.trim() || joining}
-                  className={`flex-1 px-6 py-4 rounded-xl kahoot-gradient font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/20 ${focusRing}`}
+                  className={`btn-primary flex-1 rounded-xl px-6 py-3.5 font-semibold disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none ${focusRing}`}
                 >
                   {joining ? "Joining…" : "Join Game →"}
                 </motion.button>

@@ -59,9 +59,9 @@ export default function CountdownTimer({
   const strokeDashoffset = circumference * (1 - progress);
 
   const getColor = () => {
-    if (timeLeft <= 3) return "#e21b3c";
-    if (timeLeft <= 7) return "#d89e00";
-    return "#26890c";
+    if (timeLeft <= 3) return "#f43f5e";
+    if (timeLeft <= 7) return "#f59e0b";
+    return "#14b8a6";
   };
 
   return (

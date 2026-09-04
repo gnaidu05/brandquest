@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AnswerButton from "../components/AnswerButton";
 
-const COVER_COLORS = ["#46178f", "#e21b3c", "#1368ce", "#d89e00", "#26890c", "#7b2cbf", "#ff6b35", "#06b6d4", "#f43f5e", "#8b5cf6"];
+// Quiz cover swatches, drawn from the app's own palette.
+const COVER_COLORS = ["#0d9488", "#0891b2", "#0284c7", "#4f46e5", "#7c3aed", "#c026d3", "#e11d48", "#ea580c", "#d97706", "#475569"];
 const TIME_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; }
 
@@ -20,7 +21,7 @@ export default function CreateQuiz() {
   });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [coverColor, setCoverColor] = useState("#46178f");
+  const [coverColor, setCoverColor] = useState("#0d9488");
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -94,7 +95,7 @@ export default function CreateQuiz() {
                     <span className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
                     <span className="line-clamp-1 flex-1 text-white/70">{q.text || "Untitled question"}</span>
                     {questions.length > 1 && (
-                      <span onClick={(e) => { e.stopPropagation(); removeQuestion(i); }} className="text-white/20 hover:text-kahoot-red transition-colors text-xs px-1">✕</span>
+                      <span onClick={(e) => { e.stopPropagation(); removeQuestion(i); }} className="text-white/20 hover:text-rose-500 transition-colors text-xs px-1">✕</span>
                     )}
                   </button>
                 ))}
@@ -126,7 +127,7 @@ export default function CreateQuiz() {
                     <div key={i}>
                       <label className="text-xs text-white/30 mb-1.5 block">
                         Option {i + 1}
-                        {currentQ.correctIndex === i && <span className="text-kahoot-green ml-1 font-medium">✓ correct</span>}
+                        {currentQ.correctIndex === i && <span className="text-teal-500 ml-1 font-medium">✓ correct</span>}
                       </label>
                       <AnswerButton text={opt || "Enter answer..."} index={i} variant="compact"
                         onClick={() => updateQuestion(activeQuestion, "correctIndex", i)} />
@@ -154,13 +155,13 @@ export default function CreateQuiz() {
             </AnimatePresence>
 
             {errors.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-kahoot-red/10 border border-kahoot-red/20 rounded-xl p-4">
-                {errors.map((err, i) => (<p key={i} className="text-sm text-kahoot-red-light">{err}</p>))}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
+                {errors.map((err, i) => (<p key={i} className="text-sm text-rose-400">{err}</p>))}
               </motion.div>
             )}
 
             <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={handleSave} disabled={saving}
-              className="w-full mt-5 px-6 py-4 rounded-2xl kahoot-gradient text-lg font-bold disabled:opacity-40 shadow-lg shadow-primary/20 transition-all">
+              className="w-full mt-5 px-6 py-4 rounded-2xl brand-gradient text-lg font-bold disabled:opacity-40 shadow-lg shadow-primary/20 transition-all">
               {saving ? "Saving..." : `Save Quiz (${questions.length} question${questions.length !== 1 ? "s" : ""})`}
             </motion.button>
           </div>

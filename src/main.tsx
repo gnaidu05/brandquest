@@ -17,7 +17,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
             <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
             <h2 style={{ fontSize: 20, marginBottom: 8 }}>Something went wrong</h2>
             <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>{this.state.error}</p>
-            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }} style={{ padding: "8px 24px", borderRadius: 12, background: "#46178f", color: "#fff", border: "none", cursor: "pointer", fontSize: 14 }}>
+            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }} style={{ padding: "8px 24px", borderRadius: 12, background: "#0d9488", color: "#fff", border: "none", cursor: "pointer", fontSize: 14 }}>
               Reload
             </button>
           </div>

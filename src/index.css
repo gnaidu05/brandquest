@@ -1,177 +1,205 @@
 @import "tailwindcss";
 
+/* ── Design tokens ────────────────────────────────────────────────
+   Surfaces are a neutral ink scale; the brand is teal→indigo with a
+   warm amber reserved for the single highest-intent action. The four
+   answer hues are drawn from Tailwind's own palette so nothing here
+   has to be kept in sync by hand. */
 @theme {
-  --color-primary: #6d28d9;
-  --color-primary-light: #8b5cf6;
-  --color-primary-dark: #4c1d95;
-  --color-kahoot-red: #e21b3c;
-  --color-kahoot-blue: #1d6ff2;
-  --color-kahoot-yellow: #f5a800;
-  --color-kahoot-green: #2eb82e;
-  --color-kahoot-red-light: #ff5c75;
-  --color-kahoot-blue-light: #5b9dff;
-  --color-kahoot-yellow-light: #ffc93d;
-  --color-kahoot-green-light: #57e657;
-  --color-bg-dark: #131a2e;
-  --color-bg-card: rgba(255, 255, 255, 0.05);
-  --color-bg-card-hover: rgba(255, 255, 255, 0.09);
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #0d9488;
+  --color-primary-light: #2dd4bf;
+  --color-primary-dark: #0f766e;
+
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+
+  --color-ink-950: #060910;
+  --color-ink-900: #0a0f1a;
+  --color-ink-850: #111827;
+  --color-ink-800: #1a2233;
+
+  --color-bg-dark: #0a0f1a;
+  --color-bg-card: rgba(255, 255, 255, 0.035);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.06);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   min-height: 100vh;
-  background: var(--color-bg-dark);
+  font-family: var(--font-sans);
+  background: var(--color-ink-950);
+  color: #e8edf5;
+  /* One restrained wash instead of competing coloured blobs. */
   background-image:
-    radial-gradient(ellipse at 10% 20%, rgba(109, 40, 217, 0.25) 0%, transparent 45%),
-    radial-gradient(ellipse at 90% 10%, rgba(29, 111, 242, 0.2) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 100%, rgba(226, 27, 60, 0.1) 0%, transparent 45%);
+    radial-gradient(60rem 40rem at 50% -10%, rgba(45, 212, 191, 0.09) 0%, transparent 60%),
+    radial-gradient(50rem 36rem at 88% 8%, rgba(99, 102, 241, 0.08) 0%, transparent 62%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #root { min-height: 100vh; }
 
+h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
+
+/* A hairline grid that reads as texture, not decoration. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(60% 50% at 50% 40%, #000 0%, transparent 100%);
+}
+
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(-14px) rotate(3deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 25px rgba(109, 40, 217, 0.4), 0 0 70px rgba(109, 40, 217, 0.15); }
-  50% { box-shadow: 0 0 45px rgba(139, 92, 246, 0.6), 0 0 90px rgba(29, 111, 242, 0.25); }
-}
-
-@keyframes rainbow-text {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.35); }
+  50% { box-shadow: 0 0 0 12px rgba(45, 212, 191, 0); }
 }
 
 @keyframes pop-in {
-  0% { transform: scale(0.8); opacity: 0; }
+  0% { transform: scale(0.9); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
-.animate-pop { animation: pop-in 0.3s ease-out; }
-
-/* Vibrant rainbow gradient text */
-.rainbow-text {
-  background: linear-gradient(90deg, #ff5c75, #ffc93d, #57e657, #5b9dff, #8b5cf6, #ff5c75);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rainbow-text 6s linear infinite;
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* Kahoot primary gradient */
-.kahoot-gradient {
-  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 35%, #1d6ff2 100%);
+@layer components {
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-pulse-glow { animation: pulse-glow 2.4s ease-out infinite; }
+  .animate-pop { animation: pop-in 0.25s ease-out; }
+
+  /* Brand gradient — teal into indigo. */
+  .brand-gradient { background-image: linear-gradient(135deg, #14b8a6 0%, #38bdf8 45%, #6366f1 100%); }
+  .brand-gradient-soft { background-image: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(99, 102, 241, 0.16)); }
+  .accent-gradient { background-image: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
+
+  .text-gradient {
+    background-image: linear-gradient(120deg, #ffffff 0%, #a5f3ec 55%, #c7d2fe 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-brand {
+    background-image: linear-gradient(120deg, #2dd4bf 0%, #38bdf8 50%, #818cf8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Surfaces: a single card treatment, used consistently. */
+  .card {
+    background-color: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .card:hover {
+    background-color: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  /* Kept for pages still using the older name. */
+  .card-glass {
+    background-color: rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .card-glass:hover {
+    background-color: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .btn-primary {
+    background-image: linear-gradient(135deg, #14b8a6 0%, #6366f1 100%);
+    color: #fff;
+    box-shadow: 0 8px 24px -8px rgba(20, 184, 166, 0.55);
+    transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 12px 32px -8px rgba(20, 184, 166, 0.7); }
+
+  .btn-ghost {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .btn-ghost:hover { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+
+  .game-btn { position: relative; overflow: hidden; transition: transform 0.15s ease, filter 0.15s ease; }
+  .game-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .game-btn:active { transform: translateY(0); filter: brightness(0.96); }
+
+  .timer-ring { transition: stroke-dashoffset 0.25s linear; }
+
+  .input-base {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .input-base:focus {
+    border-color: rgba(45, 212, 191, 0.7);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18);
+  }
+
+  .input-base::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+  /* Page container and grid helpers */
+  .page-container { width: 100%; max-width: 72rem; margin-inline: auto; padding: 7rem 1.5rem 4rem; }
+  .section-spacing { padding-block: 5rem; }
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1.25rem; align-items: stretch; }
 }
 
-/* Warm gradient for CTAs */
-.kahoot-gradient-warm {
-  background: linear-gradient(135deg, #ff5c75 0%, #ff8c42 50%, #ffc93d 100%);
-}
-
-/* Green gradient */
-.kahoot-gradient-green {
-  background: linear-gradient(135deg, #2eb82e 0%, #57e657 100%);
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-blue {
-  background: linear-gradient(135deg, #5b9dff 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.card-glass {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-}
-
-.card-glass:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.09);
-}
-
-/* Colored card variants */
-.card-red { border-top: 3px solid #ff5c75; }
-.card-blue { border-top: 3px solid #5b9dff; }
-.card-yellow { border-top: 3px solid #ffc93d; }
-.card-green { border-top: 3px solid #57e657; }
-.card-purple { border-top: 3px solid #8b5cf6; }
-
-.game-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.game-btn:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.15);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.game-btn:active { transform: translateY(0); filter: brightness(0.95); }
-
-.timer-ring { transition: stroke-dashoffset 0.25s linear; }
-
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.26); }
 
-input:focus, textarea:focus, select:focus { outline: none; }
+@layer base {
+  input:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible),
+  select:focus:not(:focus-visible) { outline: none; }
 
-/* Consistent page container */
-.page-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 7rem 1.5rem 4rem;
+  :focus-visible {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: 2px;
+  }
 }
 
-/* Consistent section spacing */
-.section-spacing { padding: 5rem 0; }
+/* Respect the OS "reduce motion" setting: keep the layout, drop the looping
+   ambient animation and long transitions. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 
-/* Card grid alignment */
-.grid-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-
-/* Input base */
-.input-base {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.input-base:focus {
-  border-color: rgba(139, 92, 246, 0.6);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-.input-base::placeholder { color: rgba(255, 255, 255, 0.2); }

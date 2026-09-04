@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getGame, getPlayers, startGame, subscribeToPlayers, subscribeToGame, type Player } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckIcon, CopyIcon, LinkIcon, PlayIcon } from "../components/Icons";
+import { PlayIcon } from "../components/Icons";
+import JoinPanel from "../components/JoinPanel";
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const [players, setPlayers] = useState<Player[]>([]);
   const [gamePin, setGamePin] = useState("");
-  const [copied, setCopied] = useState(false);
 
   const hostPlayerId = localStorage.getItem(`quizplay_player_${gameId}`);
   const isHost = players.find((p) => p.id === hostPlayerId)?.is_host ?? false;
@@ -28,8 +28,6 @@ export default function Lobby() {
   }, [gameId, navigate, isHost]);
 
   const handleStartGame = async () => { if (playerCount < 1 || !gameId) return; try { await startGame(gameId); } catch (e) { console.error(e); } };
-  const copyPin = async () => { try { await navigator.clipboard.writeText(gamePin); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
-  const copyLink = async () => { try { await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#/join?pin=${gamePin}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
 
   if (players.length === 0) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -39,20 +37,11 @@ export default function Lobby() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12">
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl">
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl">
         <div className="card rounded-2xl p-8 text-center sm:p-10">
-          <p className="mb-3 text-sm uppercase tracking-widest text-slate-400">Game PIN</p>
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-2.5 mb-3">
-            {gamePin.split("").map((d, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl brand-gradient flex items-center justify-center font-display text-2xl sm:text-3xl font-bold text-white shadow-lg shadow-primary/20">{d}</motion.div>
-            ))}
-          </motion.div>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <button onClick={copyPin} className="btn-ghost inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3.5 text-xs font-medium text-slate-200">{copied ? <><CheckIcon size={13} /> Copied</> : <><CopyIcon size={13} /> Copy PIN</>}</button>
-            <button onClick={copyLink} className="btn-ghost inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3.5 text-xs font-medium text-slate-200"><LinkIcon size={13} /> Copy link</button>
+          <div className="mb-8">
+            <JoinPanel pin={gamePin} />
           </div>
-          <p className="mb-8 text-xs text-slate-400">Share with players to join</p>
 
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -78,7 +67,9 @@ export default function Lobby() {
                 <motion.div key={i} className="w-2 h-2 rounded-full bg-primary-light" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} />
               ))}
             </div>
-            <p className="mt-2 text-xs text-slate-400">Waiting for host to start...</p>
+            <p className="mt-2 text-xs text-slate-400">
+              {isHost ? "Players can keep joining until you start" : "Waiting for the host to start…"}
+            </p>
           </div>
 
           {isHost ? (

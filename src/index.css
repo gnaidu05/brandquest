@@ -168,7 +168,10 @@ h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
   .input-base::placeholder { color: rgba(255, 255, 255, 0.35); }
 
   /* Page container and grid helpers */
-  .page-container { width: 100%; max-width: 72rem; margin-inline: auto; padding: 7rem 1.5rem 4rem; }
+  /* 72rem of content plus 1.5rem of padding each side, so the content edge
+     lands where the navbar's does (the navbar pads outside its max-width box).
+     Pages may narrow this with a max-w-* utility and stay centred. */
+  .page-container { width: 100%; max-width: 75rem; margin-inline: auto; padding: 7rem 1.5rem 4rem; }
   .section-spacing { padding-block: 5rem; }
   .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1.25rem; align-items: stretch; }
 }

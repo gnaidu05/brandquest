@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { CheckIcon, FlameIcon, XIcon } from "./Icons";
 
 interface ScorePopupProps {
   show: boolean;
@@ -27,23 +28,24 @@ export default function ScorePopup({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 10 }}
-              className={`text-6xl font-black mb-2 ${
-                correct ? "text-teal-500" : "text-rose-500"
+              className={`font-display mb-2 flex items-center justify-center gap-3 text-5xl font-bold ${
+                correct ? "text-teal-300" : "text-rose-300"
               }`}
             >
-              {correct ? "✓ Correct!" : "✗ Incorrect"}
+              {correct ? <CheckIcon size={44} /> : <XIcon size={44} />}
+              {correct ? "Correct!" : "Incorrect"}
             </motion.div>
             {correct && points > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-3xl font-bold text-amber-500"
+                className="text-3xl font-bold text-amber-300"
               >
                 +{points.toLocaleString()} pts
                 {streak >= 3 && (
-                  <span className="ml-2 text-sm">
-                    🔥 {streak} streak
+                  <span className="ml-2 inline-flex items-center gap-1 text-sm text-orange-300">
+                    <FlameIcon size={15} /> {streak} streak
                   </span>
                 )}
               </motion.div>

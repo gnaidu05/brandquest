@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { RankBadge } from "./Icons";
 
 interface LeaderboardEntry {
   rank: number;
@@ -19,12 +20,10 @@ export default function Leaderboard({
   compact = false,
   highlight,
 }: LeaderboardProps) {
-  const medals = ["🥇", "🥈", "🥉"];
-
   return (
     <div className="w-full">
       {!compact && (
-        <h2 className="text-2xl font-bold text-center mb-4 text-gradient">
+        <h2 className="font-display mb-4 text-center text-xl font-semibold text-white">
           Leaderboard
         </h2>
       )}
@@ -37,23 +36,19 @@ export default function Leaderboard({
             transition={{ delay: i * 0.05 }}
             className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
               entry.name === highlight
-                ? "bg-primary/30 ring-2 ring-primary-light"
+                ? "bg-teal-500/20 ring-1 ring-teal-400/50"
                 : entry.rank <= 3
-                ? "bg-white/10"
+                ? "bg-white/8"
                 : "bg-white/5"
             }`}
           >
-            <span className="text-xl w-10 text-center shrink-0">
-              {entry.rank <= 3 ? medals[entry.rank - 1] : (
-                <span className="text-sm font-bold text-white/50">
-                  #{entry.rank}
-                </span>
-              )}
+            <span className="flex w-10 shrink-0 justify-center">
+              <RankBadge rank={entry.rank} size={28} />
             </span>
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate">{entry.name}</div>
               {!compact && (
-                <div className="text-xs text-white/50">
+                <div className="text-xs text-slate-400">
                   {entry.correctCount}/{entry.totalAnswered} correct
                 </div>
               )}
@@ -63,14 +58,14 @@ export default function Leaderboard({
                 {entry.score.toLocaleString()}
               </div>
               {!compact && (
-                <div className="text-xs text-white/50">pts</div>
+                <div className="text-xs text-slate-400">pts</div>
               )}
             </div>
           </motion.div>
         ))}
       </div>
       {entries.length === 0 && (
-        <div className="text-center text-white/40 py-8">
+        <div className="text-center text-slate-400 py-8">
           No players yet
         </div>
       )}

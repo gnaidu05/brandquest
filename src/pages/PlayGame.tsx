@@ -84,7 +84,7 @@ export default function PlayGame() {
             <div className="text-center mb-6">
               <p className="text-white/40 text-sm mb-2">Correct answer:</p>
               <p className="text-lg font-bold text-teal-500">{currentQuestion.options[currentQuestion.correct_index]}</p>
-              <p className="text-xs text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
+              <p className="text-xs text-slate-400 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
             </div>
             <Leaderboard entries={leaderboard} compact />
             <div className="text-center mt-6">
@@ -106,7 +106,7 @@ export default function PlayGame() {
       <ScorePopup show={showPopup} correct={popupData.correct} points={popupData.points} streak={popupData.streak} />
 
       <div className="flex items-center justify-between mb-5">
-        <span className="text-xs text-white/30 uppercase tracking-wider">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
+        <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
         <span className="text-sm font-bold tabular-nums">{myScore} pts</span>
       </div>
 

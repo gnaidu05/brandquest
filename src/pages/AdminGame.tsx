@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getGame, getQuestions, getLeaderboard, getQuestionAnswers, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswers, type Question, type Answer, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
+import { ArrowRightIcon, ChartBarIcon, CheckIcon, TrophyIcon } from "../components/Icons";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
 import Leaderboard from "../components/Leaderboard";
@@ -52,19 +53,21 @@ export default function AdminGame() {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 py-12">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-2xl">
-          <div className="card-glass rounded-3xl p-10">
-            <h2 className="text-3xl font-black text-center mb-6 text-gradient tracking-tight">Question Results</h2>
+          <div className="card rounded-2xl p-8">
+            <h2 className="font-display mb-6 text-center text-2xl font-bold tracking-tight text-white">Question Results</h2>
             {currentQuestion && (
               <div className="text-center mb-6">
-                <p className="text-white/40 text-sm mb-2">Correct answer:</p>
-                <p className="text-xl font-bold text-teal-500">{currentQuestion.options[currentQuestion.correct_index]}</p>
-                <p className="text-xs text-white/30 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
+                <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
+                <p className="text-xl font-bold text-teal-300">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                <p className="mt-2 text-xs text-slate-400">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
               </div>
             )}
             <div className="mb-6"><Leaderboard entries={leaderboard} /></div>
             <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? async () => { if (game) await showResults(game.id); } : async () => { if (game) await nextQuestion(game.id); }}
-              className="w-full px-6 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/20">
-              {isLastQuestion ? "Final Results 🏆" : `Next Question → (${game.current_question_index + 2}/${questions.length})`}
+              className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold">
+              {isLastQuestion
+                ? <><TrophyIcon size={18} /> Final results</>
+                : <>Next question ({game.current_question_index + 2}/{questions.length}) <ArrowRightIcon size={18} /></>}
             </motion.button>
           </div>
         </motion.div>
@@ -75,8 +78,8 @@ export default function AdminGame() {
   return (
     <div className="min-h-screen flex flex-col px-6 py-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-5">
-        <span className="text-xs text-white/30 uppercase tracking-wider">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
-        <span className="text-sm text-white/50">
+        <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
+        <span className="text-sm text-slate-300">
           <span className="text-white font-bold">{answers.length}</span> / {playerCount} answered
         </span>
       </div>
@@ -85,7 +88,7 @@ export default function AdminGame() {
         <CountdownTimer duration={currentQuestion?.time_limit ?? 20} onTimeUp={() => {}} isActive={game.status === "question"} size={80} startTime={game.question_start_time} />
       </div>
 
-      <div className="card-glass rounded-2xl p-7 mb-5">
+      <div className="card mb-5 rounded-2xl p-7">
         <h2 className="text-xl sm:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
       </div>
 
@@ -94,17 +97,24 @@ export default function AdminGame() {
           const count = answers.filter((a) => a.selected_option === i).length;
           const isCorrect = i === currentQuestion.correct_index;
           return (
-            <div key={i} className={`p-4 rounded-xl flex items-center gap-3 ${isCorrect ? "bg-teal-500/15 ring-1 ring-teal-500/25" : "bg-white/[0.03]"}`}>
-              <AnswerButton text="" index={i} variant="icon" disabled />
-              <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate text-white/70">{option}</div></div>
-              <div className="text-xl font-bold tabular-nums text-white/90">{count}</div>
+            <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-teal-500/15 ring-2 ring-teal-400/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
+              <AnswerButton text="" index={i} variant="icon" swatch disabled />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-slate-200">{option}</div>
+                {isCorrect && (
+                  <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-teal-300">
+                    <CheckIcon size={13} /> Correct answer
+                  </div>
+                )}
+              </div>
+              <div className="text-xl font-bold tabular-nums text-white">{count}</div>
             </div>
           );
         })}
       </div>
 
       <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id); }}
-        className="w-full px-6 py-4 rounded-2xl brand-gradient text-lg font-bold shadow-xl shadow-primary/20">Show Results 📊</motion.button>
+        className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold"><ChartBarIcon size={18} /> Show results</motion.button>
     </div>
   );
 }

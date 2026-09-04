@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { AlertIcon } from "./Icons";
 
 interface Props {
   children: ReactNode;
@@ -21,12 +22,12 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback ?? (
           <div className="min-h-screen flex items-center justify-center px-4">
-            <div className="card-glass rounded-3xl p-12 text-center max-w-md">
-              <div className="text-5xl mb-4">⚠️</div>
+            <div className="card max-w-md rounded-2xl p-10 text-center">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 text-amber-300"><AlertIcon size={26} /></span>
               <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-              <p className="text-white/50 text-sm mb-4">
-                The backend service isn't available yet. This page requires a
-                connected Convex project to function.
+              <p className="mb-4 text-sm text-slate-300">
+                We couldn't load this page. Check your connection and try
+                again — if it keeps happening, the game may no longer exist.
               </p>
               <button
                 onClick={() => this.setState({ hasError: false })}

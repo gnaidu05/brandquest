@@ -98,6 +98,92 @@ export const KeyIcon = (p: IconProps) => (
   </Icon>
 );
 
+
+export const ChartBarIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 3v18h18" />
+    <rect x="7" y="12" width="3" height="6" rx="0.5" />
+    <rect x="12.5" y="8" width="3" height="10" rx="0.5" />
+    <rect x="18" y="5" width="3" height="13" rx="0.5" />
+  </Icon>
+);
+
+export const CopyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="9" y="9" width="12" height="12" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </Icon>
+);
+
+export const LinkIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+    <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+  </Icon>
+);
+
+export const PlayIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m6 4 14 8-14 8V4Z" />
+  </Icon>
+);
+
+export const PlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 5v14" />
+    <path d="M5 12h14" />
+  </Icon>
+);
+
+export const XIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </Icon>
+);
+
+export const TrashIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 6h18" />
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+  </Icon>
+);
+
+export const AlertIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
+  </Icon>
+);
+
+export const FlameIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 2S6 8 6 13a6 6 0 0 0 12 0c0-2-1.2-3.8-2.5-5-.7 1.3-1.6 2-2.5 2 .8-3-1-6-1-8Z" />
+  </Icon>
+);
+
+/**
+ * A podium/leaderboard rank badge. Numbers rather than medal emoji, which
+ * render inconsistently across platforms and cannot be recoloured.
+ */
+export function RankBadge({ rank, size = 28 }: { rank: number; size?: number }) {
+  const tone =
+    rank === 1 ? "bg-amber-400 text-amber-950"
+    : rank === 2 ? "bg-slate-300 text-slate-900"
+    : rank === 3 ? "bg-orange-400/90 text-orange-950"
+    : "bg-white/10 text-slate-300";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold tabular-nums ${tone}`}
+      style={{ width: size, height: size, fontSize: size * 0.45 }}
+    >
+      {rank}
+    </span>
+  );
+}
+
 /** The wordmark's glyph: a stylised play/question mark in a rounded tile. */
 export function LogoMark({ size = 36, className = "" }: { size?: number; className?: string }) {
   return (

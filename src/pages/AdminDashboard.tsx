@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listQuizzes, deleteQuiz, createGameWithHost, type Quiz } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
+import { AlertIcon, PenSquareIcon, PlayIcon, PlusIcon, TrashIcon } from "../components/Icons";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -20,14 +21,31 @@ export default function AdminDashboard() {
   const [hostName, setHostName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     listQuizzes(authorId).then(setQuizzes).catch(console.error).finally(() => setLoading(false));
   }, [authorId]);
 
+  // Deleting a quiz is irreversible, so the button asks once before doing it.
   const handleDelete = async (id: string) => {
-    await deleteQuiz(id);
-    setQuizzes((prev) => prev.filter((q) => q.id !== id));
+    if (confirmDelete !== id) {
+      setConfirmDelete(id);
+      return;
+    }
+    setConfirmDelete(null);
+    setDeleting(id);
+    setError("");
+    try {
+      await deleteQuiz(id);
+      setQuizzes((prev) => prev.filter((q) => q.id !== id));
+    } catch (e) {
+      console.error("Delete failed", e);
+      setError("Couldn't delete that quiz. Check your connection and try again.");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const startGameForQuiz = async (quizId: string) => {
@@ -49,10 +67,18 @@ export default function AdminDashboard() {
     <div className="min-h-screen">
       <Navbar />
       <div className="page-container">
+        {/* The start-game modal has its own error slot; this one covers failures
+            that happen on the page itself, such as a delete that did not land. */}
+        {error && !startingGame && (
+          <div role="alert" className="mb-6 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            <AlertIcon size={16} />
+            {error}
+          </div>
+        )}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">My Quizzes</h1>
-            <p className="text-white/40 mt-1.5">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} created</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">My Quizzes</h1>
+            <p className="mt-1.5 text-slate-400">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} created</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.03, y: -1 }}
@@ -65,15 +91,17 @@ export default function AdminDashboard() {
         </motion.div>
 
         {loading ? (
-          <div className="text-center py-24 text-white/30">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="py-24 text-center text-slate-400">
+            <div className="w-8 h-8 border-2 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             Loading quizzes...
           </div>
         ) : quizzes.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-glass rounded-3xl p-16 text-center">
-            <div className="text-7xl mb-6">📝</div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card rounded-2xl p-14 text-center">
+            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+              <PenSquareIcon size={28} />
+            </span>
             <h2 className="text-2xl font-bold mb-3">No quizzes yet</h2>
-            <p className="text-white/40 mb-8 max-w-md mx-auto leading-relaxed">
+            <p className="mx-auto mb-8 max-w-md leading-relaxed text-slate-300">
               Create your first quiz to start hosting interactive game sessions.
             </p>
             <motion.button
@@ -105,27 +133,35 @@ export default function AdminDashboard() {
                   </div>
                   <div className="p-6">
                     <h3 className="text-lg font-bold mb-1.5 line-clamp-1">{quiz.title}</h3>
-                    <p className="text-sm text-white/35 line-clamp-2 mb-5 leading-relaxed">
+                    <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-slate-300">
                       {quiz.description || "No description"}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/30 bg-white/5 px-3 py-1.5 rounded-lg">
+                      <span className="rounded-lg bg-white/8 px-3 py-1.5 text-xs text-slate-300">
                         {quiz.question_count} question{quiz.question_count !== 1 ? "s" : ""}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDelete(quiz.id)}
-                          className="text-xs text-white/30 hover:text-rose-500 transition-colors px-2 py-1"
+                          onBlur={() => setConfirmDelete((c) => (c === quiz.id ? null : c))}
+                          disabled={deleting === quiz.id}
+                          aria-label={confirmDelete === quiz.id ? `Confirm deleting ${quiz.title}` : `Delete ${quiz.title}`}
+                          className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                            confirmDelete === quiz.id
+                              ? "bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/40"
+                              : "text-slate-400 hover:bg-rose-500/10 hover:text-rose-300"
+                          }`}
                         >
-                          Delete
+                          <TrashIcon size={14} />
+                          {deleting === quiz.id ? "Deleting…" : confirmDelete === quiz.id ? "Tap to confirm" : "Delete"}
                         </button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setStartingGame(quiz.id)}
-                          className="text-sm px-5 py-2 rounded-lg bg-teal-500 hover:bg-teal-300 font-medium transition-colors"
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-teal-400 px-4 text-sm font-semibold text-teal-950 transition-colors hover:bg-teal-300"
                         >
-                          Start Game
+                          <PlayIcon size={14} /> Start game
                         </motion.button>
                       </div>
                     </div>
@@ -152,21 +188,21 @@ export default function AdminDashboard() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="card-glass rounded-3xl p-10 w-full max-w-md"
+              className="card w-full max-w-md rounded-2xl p-8"
             >
               <div className="text-center mb-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl brand-gradient flex items-center justify-center">
-                  <span className="text-3xl">🎮</span>
-                </div>
+                <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl brand-gradient text-white">
+                  <PlayIcon size={22} />
+                </span>
                 <h2 className="text-2xl font-bold mb-1">Start Game</h2>
-                <p className="text-white/40 text-sm">Enter your name as the host</p>
+                <p className="text-sm text-slate-400">Enter your name as the host</p>
               </div>
               <input
                 type="text"
                 value={hostName}
                 onChange={(e) => setHostName(e.target.value)}
                 placeholder="Your name"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-6 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 placeholder:text-white/20 text-white text-center text-lg"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-6 outline-none focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/25 placeholder:text-slate-500 text-white text-center text-lg"
                 onKeyDown={(e) => { if (e.key === "Enter" && hostName.trim()) startGameForQuiz(startingGame); }}
                 autoFocus
               />
@@ -187,7 +223,7 @@ export default function AdminDashboard() {
                   {creating ? "Creating..." : "Start →"}
                 </motion.button>
               </div>
-              {error && <p className="text-rose-500 text-sm mt-4 text-center">{error}</p>}
+              {error && <p className="mt-4 text-center text-sm text-rose-300">{error}</p>}
             </motion.div>
           </motion.div>
         )}

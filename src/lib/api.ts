@@ -1,5 +1,17 @@
 import { supabase } from "./supabase";
 
+/**
+ * An error whose message is written for the person using the app.
+ * Anything else thrown from this module (Postgres errors, network failures)
+ * carries internal wording and should not be surfaced verbatim.
+ */
+export class AppError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AppError";
+  }
+}
+
 // ── Types ──────────────────────────────────────────
 export interface Quiz {
   id: string;
@@ -188,13 +200,20 @@ export async function createGameWithHost(
   return { gameId: game.id, pin, playerId: player.id };
 }
 
+/**
+ * Looks up a game by its PIN.
+ *
+ * Returns null only when no game carries that PIN. A failing request (offline,
+ * server error, permission denied) throws, so callers can tell "wrong PIN"
+ * apart from "we could not check" and say so.
+ */
 export async function getGameByPin(pin: string): Promise<Game | null> {
   const { data, error } = await supabase
     .from("games")
     .select("*")
     .eq("pin", pin)
-    .single();
-  if (error) return null;
+    .maybeSingle();
+  if (error) throw error;
   return data;
 }
 
@@ -275,8 +294,9 @@ export async function joinGame(
   isHost: boolean
 ): Promise<string> {
   const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  if (game.status !== "lobby") throw new Error("Game already started");
+  if (!game) throw new AppError("That game no longer exists.");
+  if (game.status !== "lobby")
+    throw new AppError("That game has already started, so it can't be joined.");
 
   const { data: player, error } = await supabase
     .from("players")

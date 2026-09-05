@@ -6,6 +6,8 @@ import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
 import ScorePopup from "../components/ScorePopup";
 import Leaderboard from "../components/Leaderboard";
+import { useIsNarrow } from "../lib/useIsNarrow";
+import { TimerIcon } from "../components/Icons";
 
 export default function PlayGame() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -21,6 +23,7 @@ export default function PlayGame() {
   const [popupData, setPopupData] = useState({ correct: false, points: 0, streak: 0 });
   const questionStartTime = useRef(Date.now());
   const playerId = localStorage.getItem(`quizplay_player_${gameId}`);
+  const timerSize = useIsNarrow() ? 76 : 100;
 
   useEffect(() => {
     if (!gameId) return;
@@ -60,16 +63,18 @@ export default function PlayGame() {
     if (!answered && game) { setAnswered(true); setSelectedOption(-1); setPopupData({ correct: false, points: 0, streak: 0 }); setShowPopup(true); setTimeout(() => setShowPopup(false), 2000); }
   }, [answered, game]);
 
-  if (!game || !currentQuestion) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!game || !currentQuestion) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" /></div>;
   if (game.status === "finished") return null;
 
   // Lobby
   if (game.status === "lobby") return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="card-glass rounded-3xl p-10 text-center max-w-sm w-full">
-        <div className="text-5xl mb-4">⏳</div>
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+          <TimerIcon size={26} />
+        </span>
         <h2 className="text-2xl font-bold mb-2">Waiting to Start</h2>
-        <p className="text-white/40 text-sm">The host will begin shortly...</p>
+        <p className="text-sm text-slate-400">The host will begin shortly…</p>
       </div>
     </div>
   );
@@ -82,8 +87,8 @@ export default function PlayGame() {
           <div className="card-glass rounded-3xl p-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-gradient">Question Results</h2>
             <div className="text-center mb-6">
-              <p className="text-white/40 text-sm mb-2">Correct answer:</p>
-              <p className="text-lg font-bold text-teal-500">{currentQuestion.options[currentQuestion.correct_index]}</p>
+              <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
+              <p className="text-lg font-bold text-teal-300">{currentQuestion.options[currentQuestion.correct_index]}</p>
               <p className="text-xs text-slate-400 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
             </div>
             <Leaderboard entries={leaderboard} compact />
@@ -91,7 +96,7 @@ export default function PlayGame() {
               <div className="flex items-center justify-center gap-1.5">
                 {[0, 1, 2].map((i) => (<motion.div key={i} className="w-2 h-2 rounded-full bg-primary-light" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} />))}
               </div>
-              <p className="text-white/25 text-xs mt-2">Next question soon...</p>
+              <p className="mt-2 text-xs text-slate-400">Next question soon...</p>
             </div>
           </div>
         </motion.div>
@@ -102,25 +107,25 @@ export default function PlayGame() {
   const myScore = players.find((p) => p.id === playerId)?.score ?? 0;
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-10 max-w-3xl mx-auto">
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6 sm:py-10">
       <ScorePopup show={showPopup} correct={popupData.correct} points={popupData.points} streak={popupData.streak} />
 
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-3 flex items-center justify-between sm:mb-5">
         <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
         <span className="text-sm font-bold tabular-nums">{myScore} pts</span>
       </div>
 
-      <div className="flex justify-center mb-6">
-        <CountdownTimer duration={currentQuestion.time_limit} onTimeUp={handleTimeUp} isActive={!answered && game.status === "question"} size={100} startTime={game.question_start_time} />
+      <div className="mb-4 flex justify-center sm:mb-6">
+        <CountdownTimer duration={currentQuestion.time_limit} onTimeUp={handleTimeUp} isActive={!answered && game.status === "question"} size={timerSize} startTime={game.question_start_time} />
       </div>
 
       <AnimatePresence mode="wait">
         <motion.div key={game.current_question_index} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="flex-1 flex flex-col">
-          <div className="card-glass rounded-2xl p-8 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center leading-relaxed">{currentQuestion.text}</h2>
+          <div className="card-glass mb-5 rounded-2xl p-5 sm:mb-6 sm:p-7">
+            <h2 className="text-balance text-center text-lg font-bold leading-snug sm:text-2xl">{currentQuestion.text}</h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {currentQuestion.options.map((option, i) => (
               <AnswerButton key={`${game.current_question_index}-${i}`} text={option} index={i} onClick={() => handleAnswer(i)} selected={selectedOption === i} disabled={answered} />
             ))}
@@ -128,7 +133,7 @@ export default function PlayGame() {
 
           {answered && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center mt-5">
-              <p className="text-white/35 text-sm">{selectedOption === -1 ? "Time's up!" : "Waiting for other players..."}</p>
+              <p className="text-sm text-slate-400">{selectedOption === -1 ? "Time's up!" : "Waiting for other players..."}</p>
             </motion.div>
           )}
         </motion.div>

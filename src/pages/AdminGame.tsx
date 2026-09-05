@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getGame, getQuestions, getLeaderboard, getQuestionAnswers, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswers, type Question, type Answer, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
-import { ArrowRightIcon, ChartBarIcon, CheckIcon, TrophyIcon } from "../components/Icons";
+import { ArrowRightIcon, ChartBarIcon, CheckIcon, TimerIcon, TrophyIcon } from "../components/Icons";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
 import Leaderboard from "../components/Leaderboard";
@@ -42,9 +42,11 @@ export default function AdminGame() {
   if (game.status === "lobby") return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="card-glass rounded-3xl p-10 text-center max-w-sm w-full">
-        <div className="text-5xl mb-4">⏳</div>
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+          <TimerIcon size={26} />
+        </span>
         <h2 className="text-2xl font-bold mb-2">Lobby</h2>
-        <p className="text-white/40 text-sm">Go back to the lobby tab to start.</p>
+        <p className="text-sm text-slate-400">Go back to the lobby tab to start.</p>
       </div>
     </div>
   );
@@ -92,7 +94,7 @@ export default function AdminGame() {
         <h2 className="text-xl sm:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {currentQuestion?.options.map((option, i) => {
           const count = answers.filter((a) => a.selected_option === i).length;
           const isCorrect = i === currentQuestion.correct_index;
@@ -100,7 +102,7 @@ export default function AdminGame() {
             <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-teal-500/15 ring-2 ring-teal-400/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
               <AnswerButton text="" index={i} variant="icon" swatch disabled />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-slate-200">{option}</div>
+                <div className="break-words text-sm font-medium leading-snug text-slate-200">{option}</div>
                 {isCorrect && (
                   <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-teal-300">
                     <CheckIcon size={13} /> Correct answer

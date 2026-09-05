@@ -56,14 +56,14 @@ export default function AnswerButton({
         whileTap={!disabled ? { scale: 0.98 } : undefined}
         onClick={onClick}
         disabled={disabled}
-        className={`flex items-center gap-3 p-3 rounded-xl ${color.bg} ${color.fg} transition-all text-left ${
+        className={`flex w-full items-center gap-3 rounded-xl p-3 text-left ${color.bg} ${color.fg} transition-all ${
           selected ? "ring-4 ring-white" : ""
         } ${disabled && !swatch ? "opacity-50 cursor-not-allowed" : swatch ? "" : "cursor-pointer"} ${swatch ? "" : color.hover}`}
       >
-        <span className="text-lg w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-lg">
           {color.icon}
         </span>
-        <span className="text-sm font-medium line-clamp-2">{text}</span>
+        <span className="min-w-0 flex-1 break-words text-sm font-medium leading-snug">{text}</span>
       </motion.button>
     );
   }
@@ -74,14 +74,17 @@ export default function AnswerButton({
       whileTap={!disabled ? { scale: 0.97 } : undefined}
       onClick={onClick}
       disabled={disabled}
-      className={`game-btn flex items-center gap-4 p-5 rounded-2xl ${color.bg} ${color.fg} transition-all ${
+      className={`game-btn flex w-full items-center gap-3 rounded-2xl p-4 text-left sm:gap-4 sm:p-5 ${color.bg} ${color.fg} transition-all ${
         selected ? "ring-4 ring-white" : ""
       } ${disabled && !swatch ? "opacity-50 cursor-not-allowed" : swatch ? "" : "cursor-pointer"} ${swatch ? "" : color.hover}`}
     >
-      <span className="text-2xl w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-xl sm:h-12 sm:w-12 sm:text-2xl">
         {color.icon}
       </span>
-      <span className="text-lg font-semibold line-clamp-2">{text}</span>
+      {/* min-w-0 lets the label shrink inside the flex row; without it a long
+          answer pushes past the tile instead of wrapping. Answers are never
+          clamped — a player cannot choose what they cannot read. */}
+      <span className="min-w-0 flex-1 break-words text-base font-semibold leading-snug hyphens-auto sm:text-lg">{text}</span>
     </motion.button>
   );
 }

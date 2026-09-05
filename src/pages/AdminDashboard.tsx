@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listQuizzes, deleteQuiz, createGameWithHost, type Quiz } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
-import { AlertIcon, PenSquareIcon, PlayIcon, PlusIcon, TrashIcon } from "../components/Icons";
+import { AlertIcon, ArrowRightIcon, PenSquareIcon, PlayIcon, PlusIcon, TrashIcon } from "../components/Icons";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
               onClick={() => navigate("/admin/create")}
               className="px-8 py-3.5 rounded-xl brand-gradient font-bold shadow-lg shadow-primary/20"
             >
-              Create Your First Quiz →
+              Create your first quiz <ArrowRightIcon size={16} />
             </motion.button>
           </motion.div>
         ) : (
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
-                  className={`card-glass rounded-2xl overflow-hidden group ${["card-red", "card-blue", "card-yellow", "card-green", "card-purple"][i % 5]}`}
+                  className="card group flex flex-col overflow-hidden rounded-2xl"
                 >
                   <div className="h-36 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: quiz.cover_color + "22" }}>
                     <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at 30% 50%, ${quiz.cover_color}, transparent 70%)` }} />
@@ -131,12 +131,12 @@ export default function AdminDashboard() {
                       {quiz.title.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold mb-1.5 line-clamp-1">{quiz.title}</h3>
-                    <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-slate-300">
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 title={quiz.title} className="font-display mb-1.5 line-clamp-2 text-lg font-bold leading-snug">{quiz.title}</h3>
+                    <p title={quiz.description || undefined} className="mb-5 line-clamp-2 text-sm leading-relaxed text-slate-300">
                       {quiz.description || "No description"}
                     </p>
-                    <div className="flex items-center justify-between">
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
                       <span className="rounded-lg bg-white/8 px-3 py-1.5 text-xs text-slate-300">
                         {quiz.question_count} question{quiz.question_count !== 1 ? "s" : ""}
                       </span>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                   disabled={!hostName.trim() || creating}
                   className="flex-1 px-4 py-3.5 rounded-xl brand-gradient font-bold disabled:opacity-40 shadow-lg shadow-primary/20"
                 >
-                  {creating ? "Creating..." : "Start →"}
+                  {creating ? "Creating…" : <>Start <ArrowRightIcon size={15} /></>}
                 </motion.button>
               </div>
               {error && <p className="mt-4 text-center text-sm text-rose-300">{error}</p>}

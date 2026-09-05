@@ -4,7 +4,7 @@ import { createQuiz } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AnswerButton from "../components/AnswerButton";
-import { CheckIcon, PlusIcon, XIcon } from "../components/Icons";
+import { ArrowRightIcon, CheckIcon, PlusIcon, XIcon } from "../components/Icons";
 
 // Quiz cover swatches, drawn from the app's own palette.
 const COVER_COLORS = ["#0d9488", "#0891b2", "#0284c7", "#4f46e5", "#7c3aed", "#c026d3", "#e11d48", "#ea580c", "#d97706", "#475569"];
@@ -59,7 +59,7 @@ export default function CreateQuiz() {
       <Navbar />
       <div className="page-container max-w-5xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <button onClick={() => navigate("/admin")} className="mb-4 inline-flex min-h-9 items-center gap-1.5 text-sm text-slate-300 transition-colors hover:text-white">← Back to Dashboard</button>
+          <button onClick={() => navigate("/admin")} className="mb-4 inline-flex min-h-9 items-center gap-1.5 text-sm text-slate-300 transition-colors hover:text-white"><ArrowRightIcon size={15} className="rotate-180" /> Back to dashboard</button>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Create New Quiz</h1>
         </motion.div>
 
@@ -144,11 +144,11 @@ export default function CreateQuiz() {
 
                 <div className="flex items-center justify-between mt-7 pt-6 border-t border-white/5">
                   <button onClick={() => setActiveQuestion(Math.max(0, activeQuestion - 1))} disabled={activeQuestion === 0}
-                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors disabled:opacity-20 text-sm">← Previous</button>
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors disabled:opacity-20 text-sm inline-flex items-center gap-1.5"><ArrowRightIcon size={14} className="rotate-180" /> Previous</button>
                   <span className="text-xs tabular-nums text-slate-400">{activeQuestion + 1} / {questions.length}</span>
                   {activeQuestion < questions.length - 1 ? (
                     <button onClick={() => setActiveQuestion(Math.min(questions.length - 1, activeQuestion + 1))}
-                      className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-sm">Next →</button>
+                      className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-sm inline-flex items-center gap-1.5">Next <ArrowRightIcon size={14} /></button>
                   ) : (
                     <button onClick={addQuestion} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-teal-500/20 px-4 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/30"><PlusIcon size={15} /> Add question</button>
                   )}

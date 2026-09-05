@@ -241,17 +241,17 @@ export default function JoinGame() {
                 <button
                   onClick={backToPin}
                   aria-label="Back to PIN entry"
-                  className={`btn-ghost rounded-xl px-5 py-3.5 font-medium text-white ${focusRing}`}
+                  className={`btn-ghost inline-flex items-center justify-center rounded-xl px-5 py-3.5 font-medium text-white ${focusRing}`}
                 >
-                  ←
+                  <ArrowRightIcon size={18} className="rotate-180" />
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleJoin}
                   disabled={!name.trim() || joining}
-                  className={`btn-primary flex-1 rounded-xl px-6 py-3.5 font-semibold disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none ${focusRing}`}
+                  className={`btn-primary inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-semibold disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none ${focusRing}`}
                 >
-                  {joining ? "Joining…" : "Join Game →"}
+                  {joining ? "Joining…" : <>Join game <ArrowRightIcon size={16} /></>}
                 </motion.button>
               </div>
             </>

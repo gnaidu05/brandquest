@@ -70,7 +70,7 @@ export default function AdminDashboard() {
         {/* The start-game modal has its own error slot; this one covers failures
             that happen on the page itself, such as a delete that did not land. */}
         {error && !startingGame && (
-          <div role="alert" className="mb-6 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <div role="alert" className="mb-6 flex items-center gap-2 rounded-xl border border-punch/30 bg-punch/10 px-4 py-3 text-sm text-punch">
             <AlertIcon size={16} />
             {error}
           </div>
@@ -92,12 +92,12 @@ export default function AdminDashboard() {
 
         {loading ? (
           <div className="py-24 text-center text-slate-400">
-            <div className="w-8 h-8 border-2 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-8 h-8 border-2 border-lime border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             Loading quizzes...
           </div>
         ) : quizzes.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card rounded-2xl p-14 text-center">
-            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lime">
               <PenSquareIcon size={28} />
             </span>
             <h2 className="text-2xl font-bold mb-3">No quizzes yet</h2>
@@ -148,8 +148,8 @@ export default function AdminDashboard() {
                           aria-label={confirmDelete === quiz.id ? `Confirm deleting ${quiz.title}` : `Delete ${quiz.title}`}
                           className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors disabled:opacity-50 ${
                             confirmDelete === quiz.id
-                              ? "bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/40"
-                              : "text-slate-400 hover:bg-rose-500/10 hover:text-rose-300"
+                              ? "bg-punch/15 text-punch ring-1 ring-punch/40"
+                              : "text-slate-400 hover:bg-punch/10 hover:text-punch"
                           }`}
                         >
                           <TrashIcon size={14} />
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setStartingGame(quiz.id)}
-                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-teal-400 px-4 text-sm font-semibold text-teal-950 transition-colors hover:bg-teal-300"
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-lime px-4 text-sm font-semibold text-ink-950 transition-colors hover:brightness-110"
                         >
                           <PlayIcon size={14} /> Start game
                         </motion.button>
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
                 value={hostName}
                 onChange={(e) => setHostName(e.target.value)}
                 placeholder="Your name"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-6 outline-none focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/25 placeholder:text-slate-500 text-white text-center text-lg"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-6 outline-none focus:border-lime/60 focus:ring-2 focus:ring-lime/25 placeholder:text-slate-500 text-white text-center text-lg"
                 onKeyDown={(e) => { if (e.key === "Enter" && hostName.trim()) startGameForQuiz(startingGame); }}
                 autoFocus
               />
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                   {creating ? "Creating…" : <>Start <ArrowRightIcon size={15} /></>}
                 </motion.button>
               </div>
-              {error && <p className="mt-4 text-center text-sm text-rose-300">{error}</p>}
+              {error && <p className="mt-4 text-center text-sm text-punch">{error}</p>}
             </motion.div>
           </motion.div>
         )}

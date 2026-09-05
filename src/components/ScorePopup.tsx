@@ -29,7 +29,7 @@ export default function ScorePopup({
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 10 }}
               className={`font-display mb-2 flex items-center justify-center gap-3 text-5xl font-bold ${
-                correct ? "text-teal-300" : "text-rose-300"
+                correct ? "text-lime" : "text-punch"
               }`}
             >
               {correct ? <CheckIcon size={44} /> : <XIcon size={44} />}
@@ -40,11 +40,11 @@ export default function ScorePopup({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-3xl font-bold text-amber-300"
+                className="text-3xl font-bold text-lime"
               >
                 +{points.toLocaleString()} pts
                 {streak >= 3 && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-sm text-orange-300">
+                  <span className="ml-2 inline-flex items-center gap-1 text-sm text-punch">
                     <FlameIcon size={15} /> {streak} streak
                   </span>
                 )}

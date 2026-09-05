@@ -36,7 +36,7 @@ export default function Leaderboard({
             transition={{ delay: i * 0.05 }}
             className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
               entry.name === highlight
-                ? "bg-teal-500/20 ring-1 ring-teal-400/50"
+                ? "bg-lime/20 ring-1 ring-lime/50"
                 : entry.rank <= 3
                 ? "bg-white/8"
                 : "bg-white/5"

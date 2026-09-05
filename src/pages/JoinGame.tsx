@@ -146,7 +146,7 @@ export default function JoinGame() {
           {step === "pin" ? (
             <>
               <div className="text-center mb-10">
-                <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+                <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lime">
                   <KeyIcon size={24} />
                 </span>
                 <h1 className="font-display mb-2 text-2xl font-bold tracking-tight text-white">Join a game</h1>
@@ -157,9 +157,9 @@ export default function JoinGame() {
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <motion.div key={i} className={`w-14 h-16 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
                     pinError && pin.length > i
-                      ? "border-2 border-rose-400/50 bg-rose-500/15 text-white"
+                      ? "border-2 border-punch/50 bg-punch/15 text-white"
                       : pin.length > i
-                        ? "border-2 border-teal-400/50 bg-teal-500/15 text-white"
+                        ? "border-2 border-lime/50 bg-lime/15 text-white"
                         : "border-2 border-white/8 bg-white/[0.02] text-slate-500"
                   }`}
                     animate={pin.length === i ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 1, repeat: Infinity }}>
@@ -180,15 +180,15 @@ export default function JoinGame() {
                 placeholder="000000" autoFocus maxLength={6}
                 className={`w-full bg-white/5 border rounded-xl px-5 py-4 text-center text-2xl font-mono tracking-[0.4em] outline-none focus:ring-1 text-white placeholder:text-slate-600 ${
                   pinError
-                    ? "border-rose-400/60 focus:border-rose-400 focus:ring-rose-400/30"
-                    : "border-white/12 focus:border-teal-400/60 focus:ring-teal-400/30"
+                    ? "border-punch/60 focus:border-punch focus:ring-punch/30"
+                    : "border-white/12 focus:border-lime/60 focus:ring-lime/30"
                 }`}
               />
 
               <div id="pin-status" role="status" aria-live="polite" className="min-h-[1.75rem] mt-4 text-sm text-center">
                 {lookup.status === "checking" && <span className="text-slate-400">Checking PIN…</span>}
                 {pinError && (
-                  <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-rose-300">
+                  <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-punch">
                     {pinError}
                   </motion.p>
                 )}
@@ -211,7 +211,7 @@ export default function JoinGame() {
                 <motion.span
                   initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 16 }}
-                  className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-500/15 text-teal-300"
+                  className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-lime/30 bg-lime/15 text-lime"
                 >
                   <CheckIcon size={26} />
                 </motion.span>
@@ -231,7 +231,7 @@ export default function JoinGame() {
 
               <div role="alert" className="min-h-[1.5rem] mb-2 text-sm text-center">
                 {joinError && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-rose-300">
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-punch">
                     {joinError}
                   </motion.p>
                 )}

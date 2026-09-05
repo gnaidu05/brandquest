@@ -42,7 +42,7 @@ export default function AdminGame() {
   if (game.status === "lobby") return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="card-glass rounded-3xl p-10 text-center max-w-sm w-full">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lime">
           <TimerIcon size={26} />
         </span>
         <h2 className="text-2xl font-bold mb-2">Lobby</h2>
@@ -60,7 +60,7 @@ export default function AdminGame() {
             {currentQuestion && (
               <div className="text-center mb-6">
                 <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-                <p className="text-xl font-bold text-teal-300">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
                 <p className="mt-2 text-xs text-slate-400">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
               </div>
             )}
@@ -99,12 +99,12 @@ export default function AdminGame() {
           const count = answers.filter((a) => a.selected_option === i).length;
           const isCorrect = i === currentQuestion.correct_index;
           return (
-            <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-teal-500/15 ring-2 ring-teal-400/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
+            <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-lime/15 ring-2 ring-lime/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
               <AnswerButton text="" index={i} variant="icon" swatch disabled />
               <div className="min-w-0 flex-1">
                 <div className="break-words text-sm font-medium leading-snug text-slate-200">{option}</div>
                 {isCorrect && (
-                  <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-teal-300">
+                  <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-lime">
                     <CheckIcon size={13} /> Correct answer
                   </div>
                 )}

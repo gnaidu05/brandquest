@@ -63,14 +63,14 @@ export default function PlayGame() {
     if (!answered && game) { setAnswered(true); setSelectedOption(-1); setPopupData({ correct: false, points: 0, streak: 0 }); setShowPopup(true); setTimeout(() => setShowPopup(false), 2000); }
   }, [answered, game]);
 
-  if (!game || !currentQuestion) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!game || !currentQuestion) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-lime border-t-transparent rounded-full animate-spin" /></div>;
   if (game.status === "finished") return null;
 
   // Lobby
   if (game.status === "lobby") return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="card-glass rounded-3xl p-10 text-center max-w-sm w-full">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-teal-300">
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lime">
           <TimerIcon size={26} />
         </span>
         <h2 className="text-2xl font-bold mb-2">Waiting to Start</h2>
@@ -88,7 +88,7 @@ export default function PlayGame() {
             <h2 className="text-2xl font-bold text-center mb-6 text-gradient">Question Results</h2>
             <div className="text-center mb-6">
               <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-              <p className="text-lg font-bold text-teal-300">{currentQuestion.options[currentQuestion.correct_index]}</p>
+              <p className="text-lg font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
               <p className="text-xs text-slate-400 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
             </div>
             <Leaderboard entries={leaderboard} compact />

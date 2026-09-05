@@ -18,7 +18,7 @@ export default function Navbar() {
   }, []);
 
   const link =
-    "inline-flex min-h-11 items-center rounded-lg px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-light focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950";
+    "inline-flex min-h-11 items-center rounded-lg px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950";
 
   return (
     <header
@@ -29,24 +29,26 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between py-3.5" aria-label="Main">
         <Link
           to="/"
-          className="flex min-h-11 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-light"
+          className="flex min-h-11 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
         >
-          <LogoMark size={34} />
-          <span className="font-display text-lg font-semibold tracking-tight text-white">QuizPlay</span>
+          <LogoMark size={30} />
+          <span className="font-display text-lg font-semibold tracking-tight">
+            <span className="text-silver">Quiz</span><span className="text-lime">Mode</span>
+          </span>
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
             to="/join"
             aria-current={isJoin ? "page" : undefined}
-            className={`${link} ${isJoin ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}
+            className={`${link} ${isJoin ? "bg-volt/15 text-volt" : "text-volt/85 hover:bg-volt/10 hover:text-volt"}`}
           >
             Join a game
           </Link>
           <Link
             to="/admin"
             aria-current={isAdmin ? "page" : undefined}
-            className={`${link} btn-primary px-4 font-semibold ${isAdmin ? "ring-1 ring-white/25" : ""}`}
+            className={`${link} btn-primary px-4 font-bold ${isAdmin ? "ring-2 ring-lime/60" : ""}`}
           >
             Host
           </Link>

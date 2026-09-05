@@ -7,7 +7,7 @@ import AnswerButton from "../components/AnswerButton";
 import { ArrowRightIcon, CheckIcon, PlusIcon, XIcon } from "../components/Icons";
 
 // Quiz cover swatches, drawn from the app's own palette.
-const COVER_COLORS = ["#0d9488", "#0891b2", "#0284c7", "#4f46e5", "#7c3aed", "#c026d3", "#e11d48", "#ea580c", "#d97706", "#475569"];
+const COVER_COLORS = ["#c8ff32", "#18bfff", "#8257ff", "#ff2e88", "#00e5a0", "#7c5cff", "#ff6aa8", "#5ad1ff", "#a8dd10", "#2a2a3a"];
 const TIME_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; }
 
@@ -22,7 +22,7 @@ export default function CreateQuiz() {
   });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [coverColor, setCoverColor] = useState("#0d9488");
+  const [coverColor, setCoverColor] = useState("#c8ff32");
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -88,7 +88,7 @@ export default function CreateQuiz() {
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }} className="card-glass rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold">Questions <span className="font-normal text-slate-400">({questions.length})</span></h3>
-                <button onClick={addQuestion} className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-teal-500/20 px-3 text-xs font-semibold text-teal-200 transition-colors hover:bg-teal-500/30"><PlusIcon size={13} /> Add</button>
+                <button onClick={addQuestion} className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-lime/20 px-3 text-xs font-semibold text-lime transition-colors hover:bg-lime/30"><PlusIcon size={13} /> Add</button>
               </div>
               <div className="space-y-1.5 max-h-60 overflow-y-auto">
                 {/* Rows clamp to one line, so the full question text lives in a
@@ -97,13 +97,13 @@ export default function CreateQuiz() {
                 {questions.map((q, i) => (
                   <button key={i} onClick={() => setActiveQuestion(i)}
                     title={q.text || "Untitled question"}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 text-sm ${activeQuestion === i ? "bg-teal-500/20 ring-1 ring-teal-400/40" : "bg-white/[0.03] hover:bg-white/[0.06]"}`}>
+                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 text-sm ${activeQuestion === i ? "bg-lime/20 ring-1 ring-lime/40" : "bg-white/[0.03] hover:bg-white/[0.06]"}`}>
                     <span className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
                     {/* min-w-0 lets the clamped label shrink; without it a long
                         question pushes the remove control out of the row. */}
                     <span className="line-clamp-1 min-w-0 flex-1 text-slate-200">{q.text || "Untitled question"}</span>
                     {questions.length > 1 && (
-                      <span onClick={(e) => { e.stopPropagation(); removeQuestion(i); }} className="px-1 text-slate-500 transition-colors hover:text-rose-300" aria-label={`Remove question ${i + 1}`}><XIcon size={14} /></span>
+                      <span onClick={(e) => { e.stopPropagation(); removeQuestion(i); }} className="px-1 text-slate-500 transition-colors hover:text-punch" aria-label={`Remove question ${i + 1}`}><XIcon size={14} /></span>
                     )}
                   </button>
                 ))}
@@ -135,7 +135,7 @@ export default function CreateQuiz() {
                     <div key={i}>
                       <label className="mb-1.5 block text-xs text-slate-400">
                         Option {i + 1}
-                        {currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-teal-300"><CheckIcon size={12} /> correct</span>}
+                        {currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-lime"><CheckIcon size={12} /> correct</span>}
                       </label>
                       <AnswerButton text={opt || "Enter answer..."} index={i} variant="compact"
                         onClick={() => updateQuestion(activeQuestion, "correctIndex", i)} />
@@ -156,15 +156,15 @@ export default function CreateQuiz() {
                     <button onClick={() => setActiveQuestion(Math.min(questions.length - 1, activeQuestion + 1))}
                       className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-sm inline-flex items-center gap-1.5">Next <ArrowRightIcon size={14} /></button>
                   ) : (
-                    <button onClick={addQuestion} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-teal-500/20 px-4 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/30"><PlusIcon size={15} /> Add question</button>
+                    <button onClick={addQuestion} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-lime/20 px-4 text-sm font-semibold text-lime transition-colors hover:bg-lime/30"><PlusIcon size={15} /> Add question</button>
                   )}
                 </div>
               </motion.div>
             </AnimatePresence>
 
             {errors.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
-                {errors.map((err, i) => (<p key={i} className="text-sm text-rose-400">{err}</p>))}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-punch/10 border border-punch/25 rounded-xl p-4">
+                {errors.map((err, i) => (<p key={i} className="text-sm text-punch">{err}</p>))}
               </motion.div>
             )}
 

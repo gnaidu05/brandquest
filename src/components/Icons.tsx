@@ -170,9 +170,9 @@ export const FlameIcon = (p: IconProps) => (
  */
 export function RankBadge({ rank, size = 28 }: { rank: number; size?: number }) {
   const tone =
-    rank === 1 ? "bg-amber-400 text-amber-950"
-    : rank === 2 ? "bg-slate-300 text-slate-900"
-    : rank === 3 ? "bg-orange-400/90 text-orange-950"
+    rank === 1 ? "bg-lime text-ink-950"
+    : rank === 2 ? "bg-silver text-ink-950"
+    : rank === 3 ? "bg-punch text-ink-950"
     : "bg-white/10 text-slate-300";
   return (
     <span
@@ -184,18 +184,25 @@ export function RankBadge({ rank, size = 28 }: { rank: number; size?: number }) 
   );
 }
 
-/** The wordmark's glyph: a stylised play/question mark in a rounded tile. */
+/**
+ * The QuizMode mark: a Laser Lime "Q" with a Cyber Purple play triangle set in
+ * its counter. Drawn rather than tiled so it keeps its edges at any size and
+ * inherits nothing from the surface behind it.
+ */
 export function LogoMark({ size = 36, className = "" }: { size?: number; className?: string }) {
   return (
-    <span
-      className={`inline-flex items-center justify-center rounded-xl brand-gradient shadow-lg shadow-primary/25 ${className}`}
-      style={{ width: size, height: size }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      className={className}
       aria-hidden="true"
+      focusable="false"
     >
-      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
-        <path d="M9 8.5a3 3 0 1 1 4.2 2.75c-.8.36-1.2 1-1.2 1.85v.4" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-        <circle cx="12" cy="17.5" r="1.35" fill="#fff" />
-      </svg>
-    </span>
+      <circle cx="14.2" cy="14.2" r="9.6" stroke="#c8ff32" strokeWidth="4.6" />
+      <path d="M20.6 20.6 L26.6 26.6" stroke="#c8ff32" strokeWidth="4.6" strokeLinecap="round" />
+      <path d="M11.6 9.9 L19.4 14.2 L11.6 18.5 Z" fill="#8257ff" />
+    </svg>
   );
 }

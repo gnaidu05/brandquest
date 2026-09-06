@@ -107,7 +107,7 @@ export default function JoinGame() {
     setJoining(true);
     setJoinError("");
     try {
-      const playerId = await withTimeout(joinGame(lookup.gameId, name.trim(), false), JOIN_TIMEOUT_MS);
+      const playerId = await withTimeout(joinGame(lookup.gameId, name.trim()), JOIN_TIMEOUT_MS);
       localStorage.setItem(`quizplay_player_${lookup.gameId}`, playerId);
       navigate(`/game/${lookup.gameId}/play`);
     } catch (e) {

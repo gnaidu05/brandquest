@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getLeaderboard, getNonHostPlayers, type LeaderboardEntry } from "../lib/api";
+import { getGameQuestions, getLeaderboard, getNonHostPlayers, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
 import Leaderboard from "../components/Leaderboard";
 import { PlayIcon, RankBadge, TrophyIcon } from "../components/Icons";
@@ -14,7 +14,7 @@ export default function Results() {
 
   useEffect(() => {
     if (!gameId) return;
-    getGame(gameId).then((g) => { if (g) getQuestions(g.quiz_id).then((qs) => setQuestionCount(qs.length)); });
+    getGameQuestions(gameId).then((qs) => setQuestionCount(qs.length)).catch((e) => console.error("Could not load the questions", e));
     getLeaderboard(gameId).then(setLeaderboard);
     getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length));
   }, [gameId]);

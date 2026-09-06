@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getLeaderboard, getQuestionAnswers, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswers, type Question, type Answer, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getLeaderboard, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswerTally, type Question, type AnswerTally, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
 import { ArrowRightIcon, ChartBarIcon, CheckIcon, TimerIcon, TrophyIcon } from "../components/Icons";
 import CountdownTimer from "../components/CountdownTimer";
@@ -13,14 +13,19 @@ export default function AdminGame() {
   const [game, setGame] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [tally, setTally] = useState<AnswerTally | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
+  // The host's own player id, which is also the game's host id. Every request
+  // that moves the game on carries it, and it is what unlocks the correct
+  // answers and the live vote breakdown this screen shows.
+  const hostId = localStorage.getItem(`quizplay_player_${gameId}`);
 
   useEffect(() => {
     if (!gameId) return;
-    getGame(gameId).then((g) => { setGame(g); if (g) { getQuestions(g.quiz_id).then(setQuestions); getNonHostPlayers(g.id).then((ps) => setPlayerCount(ps.length)); } });
+    getGame(gameId).then((g) => { setGame(g); if (g) getNonHostPlayers(g.id).then((ps) => setPlayerCount(ps.length)); });
+    getGameQuestions(gameId, hostId).then(setQuestions).catch((e) => console.error("Could not load the questions", e));
     getLeaderboard(gameId).then(setLeaderboard);
-  }, [gameId]);
+  }, [gameId, hostId]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -29,8 +34,8 @@ export default function AdminGame() {
 
   useEffect(() => {
     if (!gameId || !game || game.current_question_index < 0) return;
-    return subscribeToAnswers(gameId, game.current_question_index, setAnswers);
-  }, [gameId, game?.current_question_index, game?.status]);
+    return subscribeToAnswerTally(gameId, game.current_question_index, hostId, setTally);
+  }, [gameId, hostId, game?.current_question_index, game?.status]);
 
   useEffect(() => { if (game?.status === "finished") navigate(`/game/${gameId}/results`); }, [game?.status, gameId, navigate]);
 
@@ -60,12 +65,14 @@ export default function AdminGame() {
             {currentQuestion && (
               <div className="text-center mb-6">
                 <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-                <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
-                <p className="mt-2 text-xs text-slate-400">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
+                {currentQuestion.correct_index !== null && (
+                  <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                )}
+                <p className="mt-2 text-xs text-slate-400">{tally?.correctCount ?? 0} of {tally?.answered ?? 0} correct</p>
               </div>
             )}
             <div className="mb-6"><Leaderboard entries={leaderboard} /></div>
-            <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? async () => { if (game) await showResults(game.id); } : async () => { if (game) await nextQuestion(game.id); }}
+            <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }} onClick={isLastQuestion ? async () => { if (game) await showResults(game.id, hostId); } : async () => { if (game) await nextQuestion(game.id, hostId); }}
               className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold">
               {isLastQuestion
                 ? <><TrophyIcon size={18} /> Final results</>
@@ -82,7 +89,7 @@ export default function AdminGame() {
       <div className="flex items-center justify-between mb-5">
         <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
         <span className="text-sm text-slate-300">
-          <span className="text-white font-bold">{answers.length}</span> / {playerCount} answered
+          <span className="text-white font-bold">{tally?.answered ?? 0}</span> / {playerCount} answered
         </span>
       </div>
 
@@ -96,7 +103,7 @@ export default function AdminGame() {
 
       <div className="mb-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {currentQuestion?.options.map((option, i) => {
-          const count = answers.filter((a) => a.selected_option === i).length;
+          const count = tally?.optionCounts?.[i] ?? 0;
           const isCorrect = i === currentQuestion.correct_index;
           return (
             <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-lime/15 ring-2 ring-lime/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
@@ -115,7 +122,7 @@ export default function AdminGame() {
         })}
       </div>
 
-      <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id); }}
+      <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id, hostId); }}
         className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold"><ChartBarIcon size={18} /> Show results</motion.button>
     </div>
   );

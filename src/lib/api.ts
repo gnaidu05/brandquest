@@ -12,6 +12,22 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * The messages in supabase/fix6.sql are written for the person using the app
+ * and are raised with plpgsql's default code. Everything else that can come
+ * back — a constraint name, a permission error, a network failure — carries a
+ * code of its own and internal wording, so it is logged rather than shown.
+ */
+const READABLE_PG_CODE = "P0001";
+
+function asAppError(error: unknown, fallback: string): Error {
+  const code = (error as { code?: string } | null)?.code;
+  const message = (error as { message?: string } | null)?.message;
+  if (code === READABLE_PG_CODE && message) return new AppError(message);
+  console.error(fallback, error);
+  return error instanceof Error ? error : new Error(fallback);
+}
+
 // ── Types ──────────────────────────────────────────
 export interface Quiz {
   id: string;
@@ -25,10 +41,10 @@ export interface Quiz {
 
 export interface Question {
   id: string;
-  quiz_id: string;
   text: string;
   options: string[];
-  correct_index: number;
+  /** Withheld by the server until the room has been shown this question. */
+  correct_index: number | null;
   time_limit: number;
   sort_order: number;
 }
@@ -58,15 +74,17 @@ export interface Player {
   is_host: boolean;
 }
 
-export interface Answer {
-  id: string;
-  game_id: string;
-  question_index: number;
-  player_id: string;
-  selected_option: number;
-  correct: boolean;
-  answer_time: number;
-  points: number;
+/**
+ * How a room answered one question.
+ *
+ * The breakdown is withheld from players until the question is over, so
+ * `correctCount` and `optionCounts` are null while it is still being answered.
+ * `answered` is always there — it is only a head count.
+ */
+export interface AnswerTally {
+  answered: number;
+  correctCount: number | null;
+  optionCounts: number[] | null;
 }
 
 export interface LeaderboardEntry {
@@ -80,33 +98,30 @@ export interface LeaderboardEntry {
 // ── Quiz Functions ─────────────────────────────────
 
 export async function listQuizzes(authorId: string): Promise<Quiz[]> {
-  const { data, error } = await supabase
-    .from("quizzes")
-    .select("*")
-    .eq("author_id", authorId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  const { data, error } = await supabase.rpc("list_quizzes", { p_author_id: authorId });
+  if (error) throw asAppError(error, "Could not list quizzes");
+  return (data ?? []) as Quiz[];
 }
 
-export async function getQuiz(id: string): Promise<Quiz | null> {
-  const { data, error } = await supabase
-    .from("quizzes")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-export async function getQuestions(quizId: string): Promise<Question[]> {
-  const { data, error } = await supabase
-    .from("questions")
-    .select("*")
-    .eq("quiz_id", quizId)
-    .order("sort_order");
-  if (error) throw error;
-  return data ?? [];
+/**
+ * The questions of the quiz a game is playing.
+ *
+ * Reads go through the game rather than the quiz because the server decides
+ * what to show from the game's position: `correct_index` is null until the
+ * room has reached that question, so it is never sitting in a response a
+ * player could read early. Pass the host id — the host's own player id — to
+ * get every answer straight away, which is what the host screen shows.
+ */
+export async function getGameQuestions(
+  gameId: string,
+  hostId?: string | null
+): Promise<Question[]> {
+  const { data, error } = await supabase.rpc("get_game_questions", {
+    p_game_id: gameId,
+    p_host_id: hostId ?? null,
+  });
+  if (error) throw asAppError(error, "Could not load the questions");
+  return (data ?? []) as Question[];
 }
 
 export async function createQuiz(
@@ -116,99 +131,62 @@ export async function createQuiz(
   authorId: string,
   questions: { text: string; options: string[]; correctIndex: number; timeLimit: number }[]
 ): Promise<string> {
-  const { data: quiz, error: quizErr } = await supabase
-    .from("quizzes")
-    .insert({
-      title,
-      description,
-      cover_color: coverColor,
-      author_id: authorId,
-      question_count: questions.length,
-    })
-    .select()
-    .single();
-  if (quizErr) throw quizErr;
-
-  const questionRows = questions.map((q, i) => ({
-    quiz_id: quiz.id,
-    text: q.text,
-    options: q.options,
-    correct_index: q.correctIndex,
-    time_limit: q.timeLimit,
-    sort_order: i,
-  }));
-  const { error: qErr } = await supabase.from("questions").insert(questionRows);
-  if (qErr) throw qErr;
-
-  return quiz.id;
+  const { data, error } = await supabase.rpc("create_quiz", {
+    p_title: title,
+    p_description: description,
+    p_cover_color: coverColor,
+    p_author_id: authorId,
+    p_questions: questions,
+  });
+  if (error) throw asAppError(error, "Could not save the quiz");
+  if (typeof data !== "string") throw new AppError("The quiz could not be saved. Try again.");
+  return data;
 }
 
 /**
- * Deletes a quiz and everything hanging off it.
+ * Deletes a quiz and everything hanging off it — its questions, its games,
+ * and their players and answers.
  *
- * `questions.quiz_id` cascades, but `games.quiz_id` does not, so a quiz that
- * has ever been hosted cannot be removed by deleting the quiz row alone — the
- * request fails on games_quiz_id_fkey. Its games go first; players and answers
- * cascade from those. supabase/fix4.sql adds the missing constraint, and this
- * stays correct either way.
+ * Only the author id the quiz was created under can delete it. That id is a
+ * UUID this browser generated, so it works as a key: a quiz cannot be removed
+ * by someone who has never held it.
  */
-export async function deleteQuiz(id: string): Promise<void> {
-  const { error: gamesError } = await supabase.from("games").delete().eq("quiz_id", id);
-  if (gamesError) throw gamesError;
-
-  const { error } = await supabase.from("quizzes").delete().eq("id", id);
-  if (error) throw error;
+export async function deleteQuiz(id: string, authorId: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_quiz", {
+    p_quiz_id: id,
+    p_author_id: authorId,
+  });
+  if (error) throw asAppError(error, "Could not delete the quiz");
 }
 
 // ── Game Functions ─────────────────────────────────
 
-function generatePin(): string {
-  const min = 100000;
-  const max = 999999;
-  return String(Math.floor(Math.random() * (max - min + 1)) + min);
-}
-
+/**
+ * Opens a game and seats its host.
+ *
+ * The PIN is drawn by the database against a unique index over live games, so
+ * two rooms cannot end up sharing one. The returned player id is also the
+ * game's host id: it is what proves, later, that a request to advance the
+ * game came from the host.
+ */
 export async function createGameWithHost(
   quizId: string,
+  authorId: string,
   hostName: string
 ): Promise<{ gameId: string; pin: string; playerId: string }> {
-  const pin = generatePin();
+  const { data, error } = await supabase.rpc("create_game_with_host", {
+    p_quiz_id: quizId,
+    p_author_id: authorId,
+    p_host_name: hostName,
+  });
+  if (error) throw asAppError(error, "Could not start the game");
 
-  // Create game
-  const { data: game, error: gameErr } = await supabase
-    .from("games")
-    .insert({
-      quiz_id: quizId,
-      pin,
-      host_id: "",
-      player_count: 1,
-      status: "lobby",
-      current_question_index: -1,
-    })
-    .select()
-    .single();
-  if (gameErr) throw gameErr;
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { game_id: string; pin: string; player_id: string }
+    | undefined;
+  if (!row) throw new AppError("The game could not be started. Try again.");
 
-  // Create host player
-  const { data: player, error: playerErr } = await supabase
-    .from("players")
-    .insert({
-      game_id: game.id,
-      name: hostName,
-      is_host: true,
-    })
-    .select()
-    .single();
-  if (playerErr) throw playerErr;
-
-  // Update game with host ID
-  const { error: updateErr } = await supabase
-    .from("games")
-    .update({ host_id: player.id })
-    .eq("id", game.id);
-  if (updateErr) throw updateErr;
-
-  return { gameId: game.id, pin, playerId: player.id };
+  return { gameId: row.game_id, pin: row.pin, playerId: row.player_id };
 }
 
 /**
@@ -217,12 +195,17 @@ export async function createGameWithHost(
  * Returns null only when no game carries that PIN. A failing request (offline,
  * server error, permission denied) throws, so callers can tell "wrong PIN"
  * apart from "we could not check" and say so.
+ *
+ * A PIN is unique among games that have not finished, but is free to come
+ * round again afterwards, so the newest game wins.
  */
 export async function getGameByPin(pin: string): Promise<Game | null> {
   const { data, error } = await supabase
     .from("games")
     .select("*")
     .eq("pin", pin)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -233,100 +216,65 @@ export async function getGame(id: string): Promise<Game | null> {
     .from("games")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
 
-export async function startGame(gameId: string): Promise<void> {
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from("games")
-    .update({
-      status: "question",
-      current_question_index: 0,
-      start_time: now,
-      question_start_time: now,
-    })
-    .eq("id", gameId);
-  if (error) throw error;
+/**
+ * Moves a game on.
+ *
+ * Every one of these used to be an UPDATE sent straight from the browser, on
+ * a table anyone could write — so anyone who knew a game's id could drive
+ * someone else's room. They go through the database now, which checks the
+ * host id first and works out for itself whether a question was the last one.
+ */
+async function setGameState(
+  gameId: string,
+  hostId: string | null,
+  action: "start" | "show_results" | "next_question" | "end"
+): Promise<void> {
+  const { error } = await supabase.rpc("host_set_game_state", {
+    p_game_id: gameId,
+    p_host_id: hostId,
+    p_action: action,
+  });
+  if (error) throw asAppError(error, `Could not ${action.replace("_", " ")}`);
 }
 
-export async function showResults(gameId: string): Promise<void> {
-  // Get game to check if last question
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  const questions = await getQuestions(game.quiz_id);
-  const isLast = game.current_question_index >= questions.length - 1;
-
-  const { error } = await supabase
-    .from("games")
-    .update({
-      status: isLast ? "finished" : "showingResults",
-      show_leaderboard: true,
-    })
-    .eq("id", gameId);
-  if (error) throw error;
+export function startGame(gameId: string, hostId: string | null): Promise<void> {
+  return setGameState(gameId, hostId, "start");
 }
 
-export async function nextQuestion(gameId: string): Promise<void> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  const now = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("games")
-    .update({
-      status: "question",
-      current_question_index: game.current_question_index + 1,
-      show_leaderboard: false,
-      question_start_time: now,
-    })
-    .eq("id", gameId);
-  if (error) throw error;
+export function showResults(gameId: string, hostId: string | null): Promise<void> {
+  return setGameState(gameId, hostId, "show_results");
 }
 
-export async function endGame(gameId: string): Promise<void> {
-  const { error } = await supabase
-    .from("games")
-    .update({
-      status: "finished",
-      end_time: new Date().toISOString(),
-    })
-    .eq("id", gameId);
-  if (error) throw error;
+export function nextQuestion(gameId: string, hostId: string | null): Promise<void> {
+  return setGameState(gameId, hostId, "next_question");
+}
+
+export function endGame(gameId: string, hostId: string | null): Promise<void> {
+  return setGameState(gameId, hostId, "end");
 }
 
 // ── Player Functions ───────────────────────────────
 
-export async function joinGame(
-  gameId: string,
-  name: string,
-  isHost: boolean
-): Promise<string> {
-  const game = await getGame(gameId);
-  if (!game) throw new AppError("That game no longer exists.");
-  if (game.status !== "lobby")
-    throw new AppError("That game has already started, so it can't be joined.");
-
-  const { data: player, error } = await supabase
-    .from("players")
-    .insert({
-      game_id: gameId,
-      name,
-      is_host: isHost,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-
-  // Increment player count
-  await supabase
-    .from("games")
-    .update({ player_count: game.player_count + 1 })
-    .eq("id", gameId);
-
-  return player.id;
+/**
+ * Seats a player in a lobby.
+ *
+ * "Has it started yet?" and the room's size limit are both checked by the
+ * database, holding the game row, rather than being taken on trust from the
+ * browser that asked.
+ */
+export async function joinGame(gameId: string, name: string): Promise<string> {
+  const { data, error } = await supabase.rpc("join_game", {
+    p_game_id: gameId,
+    p_name: name,
+  });
+  if (error) throw asAppError(error, "Could not join the game");
+  if (typeof data !== "string") throw new AppError("You could not be added to that game.");
+  return data;
 }
 
 export async function getPlayer(id: string): Promise<Player | null> {
@@ -334,7 +282,7 @@ export async function getPlayer(id: string): Promise<Player | null> {
     .from("players")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) return null;
   return data;
 }
@@ -366,7 +314,7 @@ export async function submitAnswer(
     p_selected_option: selectedOption,
     p_time_elapsed: timeElapsed,
   });
-  if (error) throw error;
+  if (error) throw asAppError(error, "Could not record the answer");
 
   // The function returns a single-row table.
   const row = (Array.isArray(data) ? data[0] : data) as
@@ -381,7 +329,6 @@ export async function submitAnswer(
     streak: row.streak,
   };
 }
-
 
 export async function getPlayers(gameId: string): Promise<Player[]> {
   const { data, error } = await supabase
@@ -419,17 +366,37 @@ export async function getLeaderboard(gameId: string): Promise<LeaderboardEntry[]
   }));
 }
 
-export async function getQuestionAnswers(
+/**
+ * How the room answered one question.
+ *
+ * Answer rows carry whether they were right, and the table used to be readable
+ * by anyone — so as soon as one person had answered, everybody else could look
+ * up which option that was. Only the shape of the vote comes back now, and the
+ * breakdown is held until the question is over. The host, who displays it
+ * live, passes their host id and sees it throughout.
+ */
+export async function getAnswerTally(
   gameId: string,
-  questionIndex: number
-): Promise<Answer[]> {
-  const { data, error } = await supabase
-    .from("answers")
-    .select("*")
-    .eq("game_id", gameId)
-    .eq("question_index", questionIndex);
-  if (error) throw error;
-  return data ?? [];
+  questionIndex: number,
+  hostId?: string | null
+): Promise<AnswerTally> {
+  const { data, error } = await supabase.rpc("get_answer_tally", {
+    p_game_id: gameId,
+    p_question_index: questionIndex,
+    p_host_id: hostId ?? null,
+  });
+  if (error) throw asAppError(error, "Could not load the answer tally");
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { answered: number; correct_count: number | null; option_counts: number[] | null }
+    | undefined;
+  if (!row) return { answered: 0, correctCount: null, optionCounts: null };
+
+  return {
+    answered: row.answered ?? 0,
+    correctCount: row.correct_count,
+    optionCounts: row.option_counts,
+  };
 }
 
 // ── Real-time Subscriptions ────────────────────────
@@ -472,26 +439,52 @@ export function subscribeToPlayers(
   return () => { void supabase.removeChannel(channel); };
 }
 
-export function subscribeToAnswers(
+/**
+ * Keeps the host's answer tally current while a question is open.
+ *
+ * The answers table is no longer readable from the browser, so this listens on
+ * players instead — scoring an answer updates the answering player's row, so
+ * every answer shows up here. A room answering at once would otherwise mean
+ * one re-count per player, so events are coalesced into at most one request
+ * every 400ms.
+ */
+export function subscribeToAnswerTally(
   gameId: string,
   questionIndex: number,
-  callback: (answers: Answer[]) => void
+  hostId: string | null,
+  callback: (tally: AnswerTally) => void
 ): () => void {
-  const fetchAnswers = async () => {
-    const answers = await getQuestionAnswers(gameId, questionIndex);
-    callback(answers);
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let stopped = false;
+
+  const fetchTally = async () => {
+    try {
+      const tally = await getAnswerTally(gameId, questionIndex, hostId);
+      if (!stopped) callback(tally);
+    } catch (e) {
+      console.error("Could not load the answer tally", e);
+    }
+  };
+
+  const schedule = () => {
+    if (stopped || timer) return;
+    timer = setTimeout(() => { timer = null; void fetchTally(); }, 400);
   };
 
   const channel = supabase
-    .channel(`answers:${gameId}:${questionIndex}`)
+    .channel(`tally:${gameId}:${questionIndex}`)
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: "answers", filter: `game_id=eq.${gameId}` },
-      () => { void fetchAnswers(); }
+      { event: "UPDATE", schema: "public", table: "players", filter: `game_id=eq.${gameId}` },
+      schedule
     )
     .subscribe();
 
-  void fetchAnswers();
+  void fetchTally();
 
-  return () => { void supabase.removeChannel(channel); };
+  return () => {
+    stopped = true;
+    if (timer) clearTimeout(timer);
+    void supabase.removeChannel(channel);
+  };
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getNonHostPlayers, getLeaderboard, getQuestionAnswers, submitAnswer, subscribeToGame, type Question, type Player, type Answer, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getNonHostPlayers, getLeaderboard, getAnswerTally, submitAnswer, subscribeToGame, type Question, type Player, type AnswerTally, type LeaderboardEntry } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -16,7 +16,7 @@ export default function PlayGame() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [tally, setTally] = useState<AnswerTally | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -27,10 +27,26 @@ export default function PlayGame() {
 
   useEffect(() => {
     if (!gameId) return;
-    getGame(gameId).then((g) => { setGame(g); if (g) getQuestions(g.quiz_id).then(setQuestions); });
+    getGame(gameId).then(setGame);
     getNonHostPlayers(gameId).then(setPlayers);
     getLeaderboard(gameId).then(setLeaderboard);
   }, [gameId]);
+
+  // The server withholds each question's correct answer until the room has
+  // been shown it, so what came back during the lobby has correct_index null.
+  // Re-read the list when the game reveals one — once per question, not per
+  // tick — so the results card has an answer to display.
+  const revealKey = game && (game.status === "showingResults" || game.status === "finished")
+    ? `${game.status}:${game.current_question_index}`
+    : "";
+  useEffect(() => {
+    if (!gameId) return;
+    let cancelled = false;
+    getGameQuestions(gameId)
+      .then((qs) => { if (!cancelled) setQuestions(qs); })
+      .catch((e) => console.error("Could not load the questions", e));
+    return () => { cancelled = true; };
+  }, [gameId, revealKey]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -46,12 +62,12 @@ export default function PlayGame() {
   useEffect(() => {
     if (!gameId || !game) return;
     if (game.status !== "showingResults" || game.current_question_index < 0) {
-      setAnswers([]);
+      setTally(null);
       return;
     }
     let cancelled = false;
-    getQuestionAnswers(gameId, game.current_question_index)
-      .then((a) => { if (!cancelled) setAnswers(a); })
+    getAnswerTally(gameId, game.current_question_index)
+      .then((t) => { if (!cancelled) setTally(t); })
       .catch((e) => console.error("Could not load the answer tally", e));
     return () => { cancelled = true; };
   }, [gameId, game?.status, game?.current_question_index]);
@@ -101,9 +117,15 @@ export default function PlayGame() {
           <div className="card-glass rounded-3xl p-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-gradient">Question Results</h2>
             <div className="text-center mb-6">
-              <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-              <p className="text-lg font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
-              <p className="text-xs text-slate-400 mt-2">{answers.filter((a) => a.correct).length} of {answers.length} correct</p>
+              {currentQuestion.correct_index !== null && (
+                <>
+                  <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
+                  <p className="text-lg font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                </>
+              )}
+              {tally && tally.correctCount !== null && (
+                <p className="text-xs text-slate-400 mt-2">{tally.correctCount} of {tally.answered} correct</p>
+              )}
             </div>
             <Leaderboard entries={leaderboard} compact />
             <div className="text-center mt-6">

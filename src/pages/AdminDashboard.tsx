@@ -38,7 +38,7 @@ export default function AdminDashboard() {
     setDeleting(id);
     setError("");
     try {
-      await deleteQuiz(id);
+      await deleteQuiz(id, authorId);
       setQuizzes((prev) => prev.filter((q) => q.id !== id));
     } catch (e) {
       console.error("Delete failed", e);
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     setCreating(true);
     setError("");
     try {
-      const result = await createGameWithHost(quizId, hostName.trim());
+      const result = await createGameWithHost(quizId, authorId, hostName.trim());
       localStorage.setItem(`quizplay_player_${result.gameId}`, result.playerId);
       navigate(`/game/${result.gameId}`);
     } catch (e: any) {

@@ -27,7 +27,7 @@ export default function Lobby() {
     return () => { unsubGame(); unsubPlayers(); };
   }, [gameId, navigate, isHost]);
 
-  const handleStartGame = async () => { if (playerCount < 1 || !gameId) return; try { await startGame(gameId); } catch (e) { console.error(e); } };
+  const handleStartGame = async () => { if (playerCount < 1 || !gameId) return; try { await startGame(gameId, hostPlayerId); } catch (e) { console.error(e); } };
 
   if (players.length === 0) return (
     <div className="min-h-screen flex items-center justify-center">

@@ -80,7 +80,12 @@ CREATE TABLE answers (
 CREATE INDEX idx_answers_game_question ON answers(game_id, question_index);
 CREATE INDEX idx_answers_player_game ON answers(player_id, game_id);
 
--- Enable Row Level Security (RLS) but allow all operations for now
+-- Enable Row Level Security (RLS) but allow all operations for now.
+--
+-- These policies let anyone holding the anon key — which ships in the
+-- JavaScript bundle — read every correct answer, set their own score, and
+-- delete another person's quiz. supabase/fix6.sql and supabase/fix7.sql
+-- replace them; apply both after this file.
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE games ENABLE ROW LEVEL SECURITY;

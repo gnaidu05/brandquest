@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getQuestions, getNonHostPlayers, getLeaderboard, getQuestionAnswers, submitAnswer, subscribeToGame, subscribeToAnswers, type Question, type Player, type Answer, type LeaderboardEntry } from "../lib/api";
+import { getGame, getQuestions, getNonHostPlayers, getLeaderboard, getQuestionAnswers, submitAnswer, subscribeToGame, type Question, type Player, type Answer, type LeaderboardEntry } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -37,10 +37,24 @@ export default function PlayGame() {
     return subscribeToGame(gameId, (ug) => { setGame(ug); getLeaderboard(gameId).then(setLeaderboard); });
   }, [gameId]);
 
+  // A player needs the answer tally for one line on the results card, and
+  // nothing before that. Subscribing to every insert made each client refetch
+  // every answer on every answer, so a room of N cost N squared realtime
+  // messages and N squared queries per question — the ceiling was about 30
+  // players. Fetch once when results appear instead. The host keeps its live
+  // subscription; it is the one screen that needs the count as it moves.
   useEffect(() => {
-    if (!gameId || !game || game.current_question_index < 0) return;
-    return subscribeToAnswers(gameId, game.current_question_index, setAnswers);
-  }, [gameId, game?.current_question_index, game?.status]);
+    if (!gameId || !game) return;
+    if (game.status !== "showingResults" || game.current_question_index < 0) {
+      setAnswers([]);
+      return;
+    }
+    let cancelled = false;
+    getQuestionAnswers(gameId, game.current_question_index)
+      .then((a) => { if (!cancelled) setAnswers(a); })
+      .catch((e) => console.error("Could not load the answer tally", e));
+    return () => { cancelled = true; };
+  }, [gameId, game?.status, game?.current_question_index]);
 
   useEffect(() => { setSelectedOption(null); setAnswered(false); setShowPopup(false); questionStartTime.current = Date.now(); }, [game?.current_question_index]);
   useEffect(() => { if (game?.status === "finished") navigate(`/game/${gameId}/results`); }, [game?.status, gameId, navigate]);

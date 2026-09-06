@@ -23,7 +23,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         this.props.fallback ?? (
           <div className="min-h-screen flex items-center justify-center px-4">
             <div className="card max-w-md rounded-2xl p-10 text-center">
-              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 text-amber-300"><AlertIcon size={26} /></span>
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-lime/25 bg-lime/10 text-lime"><AlertIcon size={26} /></span>
               <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
               <p className="mb-4 text-sm text-slate-300">
                 We couldn't load this page. Check your connection and try

@@ -87,7 +87,7 @@ export default function JoinPanel({ pin }: { pin: string }) {
           </p>
           <p className="mb-4 text-sm leading-relaxed text-slate-300">
             Scan the code, or go to{" "}
-            <span className="font-medium text-teal-300">{displayUrl(url).split("#")[0]}</span>{" "}
+            <span className="font-medium text-lime">{displayUrl(url).split("#")[0]}</span>{" "}
             and enter the PIN.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">

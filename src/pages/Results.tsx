@@ -19,7 +19,7 @@ export default function Results() {
     getNonHostPlayers(gameId).then((ps) => setPlayerCount(ps.length));
   }, [gameId]);
 
-  if (leaderboard.length === 0) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" /></div>;
+  if (leaderboard.length === 0) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-lime border-t-transparent rounded-full animate-spin" /></div>;
 
   const podium = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
@@ -31,7 +31,7 @@ export default function Results() {
           <motion.span
             initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 160, damping: 16, delay: 0.15 }}
-            className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 text-amber-300"
+            className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-lime/25 bg-lime/10 text-lime"
           >
             <TrophyIcon size={30} />
           </motion.span>
@@ -54,12 +54,12 @@ export default function Results() {
             {/* 1st */}
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col items-center w-32 sm:w-40">
               <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity }}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full brand-gradient flex items-center justify-center text-3xl sm:text-4xl font-bold mb-2 ring-4 ring-amber-400/40 shadow-xl shadow-primary/20">{podium[0].name.charAt(0)}</motion.div>
-              <p className="font-bold text-base sm:text-lg truncate w-full text-center text-amber-300">{podium[0].name}</p>
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full brand-gradient flex items-center justify-center text-3xl sm:text-4xl font-bold mb-2 ring-4 ring-lime/40 shadow-xl shadow-primary/20">{podium[0].name.charAt(0)}</motion.div>
+              <p className="font-bold text-base sm:text-lg truncate w-full text-center text-lime">{podium[0].name}</p>
               <p className="mb-2 text-sm text-slate-400">{podium[0].score.toLocaleString()}</p>
               <motion.div initial={{ height: 0 }} animate={{ height: 170 }} transition={{ delay: 0.5, duration: 0.5 }}
-                className="flex w-full items-center justify-center rounded-t-xl border-x border-t border-amber-400/25 bg-gradient-to-t from-amber-400/5 to-amber-400/20 pb-2"><RankBadge rank={1} size={40} /></motion.div>
-              <p className="mt-1.5 text-xs font-semibold text-amber-300">#1</p>
+                className="flex w-full items-center justify-center rounded-t-xl border-x border-t border-lime/25 bg-gradient-to-t from-lime/5 to-lime/20 pb-2"><RankBadge rank={1} size={40} /></motion.div>
+              <p className="mt-1.5 text-xs font-semibold text-lime">#1</p>
             </motion.div>
             {/* 3rd */}
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center w-28 sm:w-36">

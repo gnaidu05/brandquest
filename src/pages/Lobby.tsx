@@ -46,7 +46,7 @@ export default function Lobby() {
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="font-display font-semibold text-white">Players</span>
-              <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-xs font-bold tabular-nums text-teal-200">{playerCount}</span>
+              <span className="rounded-full bg-lime/20 px-2.5 py-0.5 text-xs font-bold tabular-nums text-lime">{playerCount}</span>
             </div>
             <div className="max-h-48 overflow-y-auto space-y-1.5">
               <AnimatePresence>
@@ -54,7 +54,7 @@ export default function Lobby() {
                   <motion.div key={p.id} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center text-sm font-bold shrink-0">{p.name.charAt(0).toUpperCase()}</div>
-                    <span className="font-medium flex-1 text-left text-sm">{p.name}{p.is_host && <span className="ml-2 rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-300">Host</span>}</span>
+                    <span className="font-medium flex-1 text-left text-sm">{p.name}{p.is_host && <span className="ml-2 rounded-md bg-lime/15 px-1.5 py-0.5 text-[11px] font-semibold text-lime">Host</span>}</span>
                   </motion.div>
                 ))}
               </AnimatePresence>

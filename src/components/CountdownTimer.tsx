@@ -59,9 +59,9 @@ export default function CountdownTimer({
   const strokeDashoffset = circumference * (1 - progress);
 
   const getColor = () => {
-    if (timeLeft <= 3) return "#f43f5e";
-    if (timeLeft <= 7) return "#f59e0b";
-    return "#14b8a6";
+    if (timeLeft <= 3) return "#ff2e88";   // Punch Pink — out of time
+    if (timeLeft <= 7) return "#18bfff";   // Electric Blue — running low
+    return "#c8ff32";                      // Laser Lime — plenty left
   };
 
   return (

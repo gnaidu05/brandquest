@@ -9,22 +9,34 @@
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary: #0d9488;
-  --color-primary-light: #2dd4bf;
-  --color-primary-dark: #0f766e;
+  /* Brand palette */
+  --color-lime: #c8ff32;        /* Laser Lime — the primary action */
+  --color-grape: #8257ff;       /* Cyber Purple */
+  /* Cyber Purple fails AA under both white (4.01) and near-black (4.50) text.
+     Answer tiles carry body-size text, so they use this deepened step, which
+     clears 6:1 against white. The brand purple stays for accents and edges. */
+  --color-grape-deep: #6633e6;
+  --color-punch: #ff2e88;       /* Punch Pink */
+  --color-volt: #18bfff;        /* Electric Blue */
+  --color-silver: #f2f4fa;      /* Silver White — body copy */
 
-  --color-accent: #f59e0b;
-  --color-accent-light: #fbbf24;
+  --color-primary: #c8ff32;
+  --color-primary-light: #d9ff66;
+  --color-primary-dark: #a8dd10;
 
-  --color-ink-950: #060910;
-  --color-ink-900: #0a0f1a;
-  --color-ink-850: #111827;
-  --color-ink-800: #1a2233;
+  --color-accent: #ff2e88;
+  --color-accent-light: #ff6aa8;
 
-  --color-bg-dark: #0a0f1a;
+  --color-ink-950: #09090f;     /* Near Black */
+  --color-ink-900: #0e0e17;
+  --color-ink-850: #15151f;
+  --color-ink-800: #1c1c28;
+
+  --color-bg-dark: #09090f;
   --color-bg-card: rgba(255, 255, 255, 0.035);
   --color-bg-card-hover: rgba(255, 255, 255, 0.06);
 }
+
 
 html {
   scroll-behavior: smooth;
@@ -35,11 +47,12 @@ body {
   min-height: 100vh;
   font-family: var(--font-sans);
   background: var(--color-ink-950);
-  color: #e8edf5;
+  color: #f2f4fa;
   /* One restrained wash instead of competing coloured blobs. */
   background-image:
-    radial-gradient(60rem 40rem at 50% -10%, rgba(45, 212, 191, 0.09) 0%, transparent 60%),
-    radial-gradient(50rem 36rem at 88% 8%, rgba(99, 102, 241, 0.08) 0%, transparent 62%);
+    radial-gradient(60rem 40rem at 50% -12%, rgba(130, 87, 255, 0.14) 0%, transparent 62%),
+    radial-gradient(48rem 34rem at 90% 6%, rgba(255, 46, 136, 0.10) 0%, transparent 60%),
+    radial-gradient(44rem 30rem at 6% 30%, rgba(24, 191, 255, 0.08) 0%, transparent 60%);
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
@@ -63,8 +76,8 @@ h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.35); }
-  50% { box-shadow: 0 0 0 12px rgba(45, 212, 191, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 46, 136, 0.45); }
+  50% { box-shadow: 0 0 0 12px rgba(255, 46, 136, 0); }
 }
 
 @keyframes pop-in {
@@ -82,20 +95,36 @@ h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
   .animate-pulse-glow { animation: pulse-glow 2.4s ease-out infinite; }
   .animate-pop { animation: pop-in 0.25s ease-out; }
 
-  /* Brand gradient — teal into indigo. */
-  .brand-gradient { background-image: linear-gradient(135deg, #14b8a6 0%, #38bdf8 45%, #6366f1 100%); }
-  .brand-gradient-soft { background-image: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(99, 102, 241, 0.16)); }
-  .accent-gradient { background-image: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
+  /* Brand gradient — purple into pink, the mark's own pairing. */
+  .brand-gradient { background-image: linear-gradient(135deg, #8257ff 0%, #ff2e88 100%); }
+  .brand-gradient-soft { background-image: linear-gradient(135deg, rgba(130, 87, 255, 0.18), rgba(255, 46, 136, 0.14)); }
+  .accent-gradient { background-image: linear-gradient(135deg, #ff2e88 0%, #8257ff 100%); }
+
+  /* Neon edges. Colour carries meaning here, so each is paired with a border
+     rather than a glow alone — a glow disappears under prefers-reduced-*. */
+  .glow-lime { box-shadow: 0 0 0 1px rgba(200, 255, 50, 0.35), 0 8px 28px -6px rgba(200, 255, 50, 0.45); }
+  .glow-grape { box-shadow: 0 0 0 1px rgba(130, 87, 255, 0.4), 0 10px 34px -8px rgba(130, 87, 255, 0.5); }
+  .glow-punch { box-shadow: 0 0 0 1px rgba(255, 46, 136, 0.4), 0 10px 34px -8px rgba(255, 46, 136, 0.45); }
+
+  /* The hero preview sits in a lit purple-to-pink frame. */
+  .neon-frame {
+    position: relative;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--color-ink-900), var(--color-ink-900)) padding-box,
+      linear-gradient(135deg, #8257ff, #ff2e88) border-box;
+    box-shadow: 0 0 46px -12px rgba(130, 87, 255, 0.55);
+  }
 
   .text-gradient {
-    background-image: linear-gradient(120deg, #ffffff 0%, #a5f3ec 55%, #c7d2fe 100%);
+    background-image: linear-gradient(120deg, #ffffff 0%, #d9ff66 55%, #c8ff32 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
   .text-gradient-brand {
-    background-image: linear-gradient(120deg, #2dd4bf 0%, #38bdf8 50%, #818cf8 100%);
+    background-image: linear-gradient(110deg, #8257ff 0%, #b04bd6 45%, #ff2e88 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -128,13 +157,13 @@ h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
   }
 
   .btn-primary {
-    background-image: linear-gradient(135deg, #14b8a6 0%, #6366f1 100%);
-    color: #fff;
-    box-shadow: 0 8px 24px -8px rgba(20, 184, 166, 0.55);
+    background-color: #c8ff32;
+    color: #09090f;
+    box-shadow: 0 8px 26px -8px rgba(200, 255, 50, 0.55);
     transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
 
-  .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 12px 32px -8px rgba(20, 184, 166, 0.7); }
+  .btn-primary:hover { filter: brightness(1.06); box-shadow: 0 12px 34px -8px rgba(200, 255, 50, 0.75); }
 
   .btn-ghost {
     background-color: rgba(255, 255, 255, 0.05);
@@ -161,8 +190,8 @@ h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
   }
 
   .input-base:focus {
-    border-color: rgba(45, 212, 191, 0.7);
-    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18);
+    border-color: rgba(200, 255, 50, 0.7);
+    box-shadow: 0 0 0 3px rgba(200, 255, 50, 0.2);
   }
 
   .input-base::placeholder { color: rgba(255, 255, 255, 0.35); }

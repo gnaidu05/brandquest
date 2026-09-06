@@ -15,11 +15,15 @@ interface AnswerButtonProps {
 // distinguishable without relying on colour alone. `fg` keeps text legible on
 // each fill: the light fills take dark text, and the two that carry white text
 // use the 600 step so 18px labels clear 4.5:1.
+// Each option carries a shape as well as a colour, so the four stay
+// distinguishable without relying on colour alone. Foregrounds are chosen per
+// fill: blue, lime and pink read best with near-black, and the purple uses the
+// deepened step so white clears AA on body-size text.
 const COLORS = [
-  { bg: "bg-rose-600", fg: "text-white", hover: "hover:brightness-110", icon: "▲" },
-  { bg: "bg-indigo-600", fg: "text-white", hover: "hover:brightness-110", icon: "◆" },
-  { bg: "bg-amber-500", fg: "text-amber-950", hover: "hover:brightness-110", icon: "●" },
-  { bg: "bg-teal-500", fg: "text-teal-950", hover: "hover:brightness-110", icon: "■" },
+  { bg: "bg-volt", fg: "text-ink-950", hover: "hover:brightness-110", icon: "▲" },
+  { bg: "bg-grape-deep", fg: "text-white", hover: "hover:brightness-110", icon: "◆" },
+  { bg: "bg-lime", fg: "text-ink-950", hover: "hover:brightness-110", icon: "■" },
+  { bg: "bg-punch", fg: "text-ink-950", hover: "hover:brightness-110", icon: "●" },
 ];
 
 export default function AnswerButton({

@@ -339,6 +339,19 @@ export async function getPlayer(id: string): Promise<Player | null> {
   return data;
 }
 
+/**
+ * Records an answer and scores it.
+ *
+ * The whole thing happens inside submit_answer() in one round trip. It used to
+ * be six sequential requests from the browser, which meant ~6N of them landing
+ * at once when a room answered together, and it computed `correct` and
+ * `points` client-side — so a player could post any score they liked. The
+ * function decides both, under a lock on the player row, and a unique
+ * constraint on (game_id, question_index, player_id) makes a double tap
+ * idempotent rather than double-scoring.
+ *
+ * Requires supabase/fix5.sql to have been applied.
+ */
 export async function submitAnswer(
   gameId: string,
   playerId: string,
@@ -346,76 +359,29 @@ export async function submitAnswer(
   selectedOption: number,
   timeElapsed: number
 ): Promise<{ alreadyAnswered: boolean; points: number; correct: boolean; streak: number }> {
-  // Check if already answered
-  const { data: existing } = await supabase
-    .from("answers")
-    .select("*")
-    .eq("game_id", gameId)
-    .eq("question_index", questionIndex)
-    .eq("player_id", playerId)
-    .single();
-
-  if (existing) {
-    return {
-      alreadyAnswered: true,
-      points: existing.points,
-      correct: existing.correct,
-      streak: 0,
-    };
-  }
-
-  // Get game and question
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  const questions = await getQuestions(game.quiz_id);
-  const question = questions[questionIndex];
-  if (!question) throw new Error("Question not found");
-
-  const correct = selectedOption === question.correct_index;
-
-  // Calculate points
-  let points = 0;
-  if (correct) {
-    const timeFraction = Math.max(0, 1 - timeElapsed / question.time_limit);
-    points = Math.round(100 + timeFraction * 900);
-  }
-
-  // Get player for streak
-  const player = await getPlayer(playerId);
-  if (!player) throw new Error("Player not found");
-
-  const newStreak = correct ? player.streak + 1 : 0;
-  const streakBonus = correct && newStreak >= 3 ? 100 : 0;
-  points += streakBonus;
-
-  // Insert answer
-  const { error: answerErr } = await supabase.from("answers").insert({
-    game_id: gameId,
-    question_index: questionIndex,
-    player_id: playerId,
-    selected_option: selectedOption,
-    correct,
-    answer_time: timeElapsed,
-    points,
+  const { data, error } = await supabase.rpc("submit_answer", {
+    p_game_id: gameId,
+    p_player_id: playerId,
+    p_question_index: questionIndex,
+    p_selected_option: selectedOption,
+    p_time_elapsed: timeElapsed,
   });
-  if (answerErr) throw answerErr;
+  if (error) throw error;
 
-  // Update player score
-  const { error: playerErr } = await supabase
-    .from("players")
-    .update({
-      score: player.score + points,
-      streak: newStreak,
-      correct_count: player.correct_count + (correct ? 1 : 0),
-      total_answered: player.total_answered + 1,
-    })
-    .eq("id", playerId);
-  if (playerErr) throw playerErr;
+  // The function returns a single-row table.
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { already_answered: boolean; points: number; correct: boolean; streak: number }
+    | undefined;
+  if (!row) throw new AppError("That answer could not be recorded. Try again.");
 
-  return { alreadyAnswered: false, points, correct, streak: newStreak };
+  return {
+    alreadyAnswered: row.already_answered,
+    points: row.points,
+    correct: row.correct,
+    streak: row.streak,
+  };
 }
 
-// ── Query Functions ────────────────────────────────
 
 export async function getPlayers(gameId: string): Promise<Player[]> {
   const { data, error } = await supabase

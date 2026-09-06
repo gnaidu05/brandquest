@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createQuiz } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +9,10 @@ import { ArrowRightIcon, CheckIcon, PlusIcon, XIcon } from "../components/Icons"
 // Quiz cover swatches, drawn from the app's own palette.
 const COVER_COLORS = ["#c8ff32", "#18bfff", "#8257ff", "#ff2e88", "#00e5a0", "#7c5cff", "#ff6aa8", "#5ad1ff", "#a8dd10", "#2a2a3a"];
 const TIME_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
+// Drawn inside the border box with a negative offset: the question list is a
+// scroller, so a ring sitting outside the button would be clipped by it.
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lime";
 interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; }
 
 export default function CreateQuiz() {
@@ -25,11 +29,24 @@ export default function CreateQuiz() {
   const [coverColor, setCoverColor] = useState("#c8ff32");
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]);
   const [activeQuestion, setActiveQuestion] = useState(0);
+  const [focusRow, setFocusRow] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const addQuestion = () => { setQuestions([...questions, { text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]); setActiveQuestion(questions.length); };
-  const removeQuestion = (i: number) => { if (questions.length <= 1) return; const q = questions.filter((_, idx) => idx !== i); setQuestions(q); setActiveQuestion(Math.min(activeQuestion, q.length - 1)); };
+  const removeQuestion = (i: number) => {
+    if (questions.length <= 1) return;
+    const q = questions.filter((_, idx) => idx !== i);
+    setQuestions(q);
+    // Removing a row above the one being edited shifts it down, so the index
+    // has to move with it — clamping alone would quietly open a different
+    // question in the editor.
+    setActiveQuestion(i < activeQuestion ? activeQuestion - 1 : Math.min(activeQuestion, q.length - 1));
+    // The button that was just pressed unmounts with its row, which would drop
+    // keyboard focus to the top of the page. Hand it to the row that moved up.
+    setFocusRow(Math.min(i, q.length - 1));
+  };
   const updateQuestion = (i: number, field: keyof QuestionDraft, val: any) => { const q = [...questions]; (q[i] as any)[field] = val; setQuestions(q); };
 
   const validate = (): string[] => {
@@ -51,6 +68,16 @@ export default function CreateQuiz() {
       navigate("/admin");
     } catch (e) { setErrors(["Failed to save. Try again."]); } finally { setSaving(false); }
   };
+
+  // Focus is moved after the removed row has actually gone from the DOM.
+  useEffect(() => {
+    if (focusRow === null) return;
+    const list = listRef.current;
+    const row = list?.querySelectorAll<HTMLButtonElement>("[data-remove-question]")[focusRow]
+      ?? list?.querySelectorAll<HTMLButtonElement>("[data-select-question]")[focusRow];
+    row?.focus();
+    setFocusRow(null);
+  }, [focusRow]);
 
   const currentQ = questions[activeQuestion];
 
@@ -90,22 +117,36 @@ export default function CreateQuiz() {
                 <h3 className="font-bold">Questions <span className="font-normal text-slate-400">({questions.length})</span></h3>
                 <button onClick={addQuestion} className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-lime/20 px-3 text-xs font-semibold text-lime transition-colors hover:bg-lime/30"><PlusIcon size={13} /> Add</button>
               </div>
-              <div className="space-y-1.5 max-h-60 overflow-y-auto">
+              <div ref={listRef} className="space-y-1.5 max-h-60 overflow-y-auto">
                 {/* Rows clamp to one line, so the full question text lives in a
                     title attribute — otherwise a long question is unreachable
-                    from this list. */}
+                    from this list.
+
+                    Selecting and removing are two buttons side by side rather
+                    than one nested in the other: the remove control used to be
+                    a span inside the row button, so it could only be reached
+                    with a mouse and never announced itself as a control. */}
                 {questions.map((q, i) => (
-                  <button key={i} onClick={() => setActiveQuestion(i)}
-                    title={q.text || "Untitled question"}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 text-sm ${activeQuestion === i ? "bg-lime/20 ring-1 ring-lime/40" : "bg-white/[0.03] hover:bg-white/[0.06]"}`}>
-                    <span className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
-                    {/* min-w-0 lets the clamped label shrink; without it a long
-                        question pushes the remove control out of the row. */}
-                    <span className="line-clamp-1 min-w-0 flex-1 text-slate-200">{q.text || "Untitled question"}</span>
+                  <div key={i}
+                    className={`flex items-center rounded-xl transition-colors ${activeQuestion === i ? "bg-lime/20 ring-1 ring-lime/40" : "bg-white/[0.03] hover:bg-white/[0.06]"}`}>
+                    <button type="button" data-select-question onClick={() => setActiveQuestion(i)}
+                      title={q.text || "Untitled question"}
+                      aria-current={activeQuestion === i ? "true" : undefined}
+                      className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl p-3 text-left text-sm ${focusRing}`}>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold">{i + 1}</span>
+                      {/* min-w-0 lets the clamped label shrink; without it a long
+                          question pushes the remove control out of the row. */}
+                      <span className="line-clamp-1 min-w-0 flex-1 text-slate-200">{q.text || "Untitled question"}</span>
+                    </button>
                     {questions.length > 1 && (
-                      <span onClick={(e) => { e.stopPropagation(); removeQuestion(i); }} className="px-1 text-slate-500 transition-colors hover:text-punch" aria-label={`Remove question ${i + 1}`}><XIcon size={14} /></span>
+                      <button type="button" data-remove-question onClick={() => removeQuestion(i)}
+                        title={`Remove question ${i + 1}`}
+                        aria-label={`Remove question ${i + 1}`}
+                        className={`mr-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-punch ${focusRing}`}>
+                        <XIcon size={14} />
+                      </button>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             </motion.div>

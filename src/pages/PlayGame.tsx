@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getGameQuestions, getNonHostPlayers, getLeaderboard, getAnswerTally, submitAnswer, subscribeToGame, type Question, type Player, type AnswerTally, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getNonHostPlayers, getLeaderboard, getAnswerTally, submitAnswer, subscribeToGame, isPoll, type Question, type Player, type AnswerTally, type LeaderboardEntry } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -90,7 +90,13 @@ export default function PlayGame() {
   }, [answered, game, playerId, selectedOption, gameId]);
 
   const handleTimeUp = useCallback(() => {
-    if (!answered && game) { setAnswered(true); setSelectedOption(-1); setPopupData({ correct: false, points: 0, streak: 0 }); setShowPopup(true); setTimeout(() => setShowPopup(false), 2000); }
+    if (!answered && game) {
+      setAnswered(true); setSelectedOption(-1);
+      setPopupData({ correct: false, points: 0, streak: 0 });
+      // Running out of time on a poll is a missed vote, not a wrong answer,
+      // so it passes without the red cross.
+      if (!isPoll(currentQuestion)) { setShowPopup(true); setTimeout(() => setShowPopup(false), 2000); }
+    }
   }, [answered, game]);
 
   if (!game || !currentQuestion) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-lime border-t-transparent rounded-full animate-spin" /></div>;
@@ -116,15 +122,44 @@ export default function PlayGame() {
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg">
           <div className="card-glass rounded-3xl p-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-gradient">Question Results</h2>
-            <div className="text-center mb-6">
-              {currentQuestion.correct_index !== null && (
+            <div className="mb-6 text-center">
+              {isPoll(currentQuestion) ? (
                 <>
-                  <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-                  <p className="text-lg font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                  <p className="mb-3 text-sm text-slate-400">How the room voted</p>
+                  {tally?.optionCounts ? (
+                    <ul className="space-y-1.5 text-left">
+                      {currentQuestion.options.map((option, i) => {
+                        const count = tally.optionCounts?.[i] ?? 0;
+                        const share = tally.answered ? Math.round((count / tally.answered) * 100) : 0;
+                        return (
+                          <li key={i} className="rounded-lg bg-white/[0.04] px-3 py-2">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="min-w-0 break-words text-sm text-slate-200">{option}</span>
+                              <span className="shrink-0 text-sm font-bold tabular-nums text-volt">{count}</span>
+                            </div>
+                            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                              <div className="h-full rounded-full bg-volt" style={{ width: `${share}%` }} />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-slate-400">{tally?.answered ?? 0} voted</p>
+                  )}
                 </>
-              )}
-              {tally && tally.correctCount !== null && (
-                <p className="text-xs text-slate-400 mt-2">{tally.correctCount} of {tally.answered} correct</p>
+              ) : (
+                <>
+                  {currentQuestion.correct_index !== null && (
+                    <>
+                      <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
+                      <p className="text-lg font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                    </>
+                  )}
+                  {tally && tally.correctCount !== null && (
+                    <p className="mt-2 text-xs text-slate-400">{tally.correctCount} of {tally.answered} correct</p>
+                  )}
+                </>
               )}
             </div>
             <Leaderboard entries={leaderboard} compact />
@@ -144,7 +179,7 @@ export default function PlayGame() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6 sm:py-10">
-      <ScorePopup show={showPopup} correct={popupData.correct} points={popupData.points} streak={popupData.streak} />
+      <ScorePopup show={showPopup} correct={popupData.correct} points={popupData.points} streak={popupData.streak} poll={isPoll(currentQuestion)} />
 
       <div className="mb-3 flex items-center justify-between sm:mb-5">
         <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>

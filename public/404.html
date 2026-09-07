@@ -4,17 +4,23 @@
   <meta charset="utf-8">
   <title>QuizMode</title>
   <script>
-    // GitHub Pages SPA routing: redirect 404s to index with the path as a query param
-    var repo = '/brandquest';
-    var path = window.location.pathname;
-    if (path.indexOf(repo) === 0) {
-      path = path.substring(repo.length);
-    }
-    var search = window.location.search || '';
-    window.location.replace(repo + '/#' + path + search);
+    // GitHub Pages serves this for any path it cannot find under the site
+    // root. Routing is hash-based, so a real route never lands here — this
+    // catches someone typing a path without the "#", and sends them to the
+    // same place with one.
+    //
+    // The site root is the first path segment (a GitHub Pages project site is
+    // served from /<repo>/), worked out at run time rather than written in, so
+    // renaming the repository does not strand this file.
+    (function () {
+      var segments = window.location.pathname.split('/').filter(Boolean);
+      var root = segments.length > 1 ? '/' + segments[0] + '/' : '/';
+      var rest = window.location.pathname.slice(root.length);
+      window.location.replace(root + '#/' + rest + (window.location.search || ''));
+    })();
   </script>
 </head>
 <body>
-  <p>Redirecting...</p>
+  <p>Redirecting…</p>
 </body>
 </html>

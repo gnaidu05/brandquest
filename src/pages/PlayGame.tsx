@@ -157,6 +157,10 @@ export default function PlayGame() {
 
       <AnimatePresence mode="wait">
         <motion.div key={game.current_question_index} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="flex-1 flex flex-col">
+          {currentQuestion.image_url && (
+            <img src={currentQuestion.image_url} alt=""
+              className="mx-auto mb-4 max-h-28 w-auto max-w-full rounded-xl object-contain sm:mb-5 sm:max-h-56" />
+          )}
           <div className="card-glass mb-5 rounded-2xl p-5 sm:mb-6 sm:p-7">
             <h2 className="text-balance text-center text-lg font-bold leading-snug sm:text-2xl">{currentQuestion.text}</h2>
           </div>

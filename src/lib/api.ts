@@ -47,6 +47,8 @@ export interface Question {
   correct_index: number | null;
   time_limit: number;
   sort_order: number;
+  /** Public URL of the question's picture, or null if it has none. */
+  image_url: string | null;
 }
 
 export interface Game {
@@ -124,12 +126,49 @@ export async function getGameQuestions(
   return (data ?? []) as Question[];
 }
 
+/** What Storage and the database will accept for a question picture. */
+export const QUESTION_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+export const QUESTION_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Puts one picture in the question-media bucket and returns its public URL.
+ *
+ * The bucket enforces the same type and size limits, so these checks exist to
+ * fail early with a sentence worth reading rather than to be the only guard.
+ * Names are random: an upload can never land on somebody else's file, and the
+ * bucket allows no overwrite or delete for the same reason.
+ */
+export async function uploadQuestionImage(file: File): Promise<string> {
+  if (!QUESTION_IMAGE_TYPES.includes(file.type)) {
+    throw new AppError("That needs to be a JPEG, PNG, WebP or GIF image.");
+  }
+  if (file.size > QUESTION_IMAGE_MAX_BYTES) {
+    throw new AppError("That image is over 2 MB. Try a smaller one.");
+  }
+
+  const extension = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${crypto.randomUUID()}${extension ? "." + extension : ""}`;
+
+  const { error } = await supabase.storage
+    .from("question-media")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw asAppError(error, "Could not upload the image");
+
+  return supabase.storage.from("question-media").getPublicUrl(path).data.publicUrl;
+}
+
 export async function createQuiz(
   title: string,
   description: string,
   coverColor: string,
   authorId: string,
-  questions: { text: string; options: string[]; correctIndex: number; timeLimit: number }[]
+  questions: {
+    text: string;
+    options: string[];
+    correctIndex: number;
+    timeLimit: number;
+    imageUrl?: string | null;
+  }[]
 ): Promise<string> {
   const { data, error } = await supabase.rpc("create_quiz", {
     p_title: title,

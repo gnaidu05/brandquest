@@ -27,6 +27,15 @@ function Icon({ size = 24, children, ...props }: IconProps) {
   );
 }
 
+export const ImageIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2.5" />
+    <circle cx="8.75" cy="9.5" r="1.5" />
+    <path d="M3.5 17.5l4.6-4.6a2 2 0 0 1 2.8 0l3.4 3.4" />
+    <path d="M13.2 15.1l1.9-1.9a2 2 0 0 1 2.8 0l2.4 2.4" />
+  </Icon>
+);
+
 export const PenSquareIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6" />

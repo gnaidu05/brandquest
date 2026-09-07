@@ -97,6 +97,11 @@ export default function AdminGame() {
         <CountdownTimer duration={currentQuestion?.time_limit ?? 20} onTimeUp={() => {}} isActive={game.status === "question"} size={80} startTime={game.question_start_time} />
       </div>
 
+      {currentQuestion?.image_url && (
+        <img src={currentQuestion.image_url} alt=""
+          className="mx-auto mb-5 max-h-64 w-auto max-w-full rounded-2xl object-contain" />
+      )}
+
       <div className="card mb-5 rounded-2xl p-7">
         <h2 className="text-xl sm:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
       </div>

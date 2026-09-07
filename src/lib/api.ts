@@ -168,6 +168,24 @@ export async function uploadQuestionImage(file: File): Promise<string> {
   return supabase.storage.from("question-media").getPublicUrl(path).data.publicUrl;
 }
 
+/**
+ * Removes one uploaded picture from the bucket.
+ *
+ * Only a file no question refers to can go — the bucket policy sees to that —
+ * which is exactly the case here: an image replaced or removed while a quiz is
+ * still being written was never saved against a question.
+ *
+ * Tidying up is not worth failing an edit over, so this reports rather than
+ * throws. The worst case is a file left behind, which is where we were before.
+ */
+export async function deleteQuestionImage(url: string | null | undefined): Promise<void> {
+  const name = (url ?? "").split("/question-media/")[1];
+  if (!name) return;
+
+  const { error } = await supabase.storage.from("question-media").remove([name]);
+  if (error) console.error("Could not remove the replaced image", error);
+}
+
 export async function createQuiz(
   title: string,
   description: string,

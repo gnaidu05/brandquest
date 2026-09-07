@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createQuiz, uploadQuestionImage, QUESTION_IMAGE_TYPES, AppError, type QuestionKind } from "../lib/api";
+import { createQuiz, uploadQuestionImage, deleteQuestionImage, QUESTION_IMAGE_TYPES, AppError, type QuestionKind } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AnswerButton from "../components/AnswerButton";
@@ -66,14 +66,24 @@ export default function CreateQuiz() {
     if (!file) return;
     setUploadError("");
     setUploading(i);
+    const replaced = questions[i].imageUrl;
     try {
       updateQuestion(i, "imageUrl", await uploadQuestionImage(file));
+      // Only once the new one is safely up: a failed upload must not take the
+      // picture the question already had.
+      if (replaced) void deleteQuestionImage(replaced);
     } catch (e) {
       setUploadError(e instanceof AppError ? e.message : "Couldn't upload that image. Try again.");
     } finally {
       setUploading(null);
       if (fileRef.current) fileRef.current.value = "";
     }
+  };
+
+  const removeImage = (i: number) => {
+    const removed = questions[i].imageUrl;
+    updateQuestion(i, "imageUrl", null);
+    if (removed) void deleteQuestionImage(removed);
   };
 
   // Changing the kind reshapes the answers with it: true or false has its two
@@ -255,7 +265,7 @@ export default function CreateQuiz() {
                           className={`inline-flex min-h-9 cursor-pointer items-center rounded-lg bg-white/5 px-3 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10 ${focusRing}`}>
                           Replace
                         </label>
-                        <button type="button" onClick={() => updateQuestion(activeQuestion, "imageUrl", null)}
+                        <button type="button" onClick={() => removeImage(activeQuestion)}
                           aria-label="Remove the image from this question"
                           className={`inline-flex min-h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-punch ${focusRing}`}>
                           <XIcon size={15} />

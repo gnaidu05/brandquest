@@ -7,6 +7,14 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force:
+        description: >-
+          Publish even when the built output is identical. Pages only
+          republishes on a new deployment, so a rebuild alone cannot bring a
+          site back — after a repository rename, for instance.
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -48,6 +56,8 @@ jobs:
       - name: Publish to gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Empty on a push; only a hand-run dispatch can set it.
+          FORCE_PUBLISH: ${{ inputs.force }}
         run: |
           set -euo pipefail
           remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
@@ -64,8 +74,24 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "No change in built output; nothing to deploy."
-            exit 0
+            # An unchanged build normally means there is nothing to publish, and
+            # stopping here keeps gh-pages free of no-op commits. But Pages only
+            # republishes when it sees a new deployment, so when the site itself
+            # needs waking — after a repository rename, say — that guard is the
+            # thing standing in the way. `force` is the way past it, and it is
+            # only ever set by hand on a workflow_dispatch run.
+            # Defaulted, not bare: the script runs under `set -u`, and an
+            # unset variable there would fail every deploy rather than just
+            # this branch.
+            if [ "${FORCE_PUBLISH:-}" = "true" ]; then
+              echo "No change in built output; forcing a deployment anyway."
+              git commit --allow-empty -m "Redeploy ${GITHUB_SHA::7} from ${GITHUB_REF_NAME} (forced)"
+            else
+              echo "No change in built output; nothing to deploy."
+              echo "Re-run this workflow with 'force' to publish anyway."
+              exit 0
+            fi
+          else
+            git commit -m "Deploy ${GITHUB_SHA::7} from ${GITHUB_REF_NAME}"
           fi
-          git commit -m "Deploy ${GITHUB_SHA::7} from ${GITHUB_REF_NAME}"
           git push "$remote" gh-pages

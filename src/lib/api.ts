@@ -39,8 +39,16 @@ export interface Quiz {
   created_at: string;
 }
 
+/**
+ * quiz      2-6 options, one right, scored on speed.
+ * truefalse the same, with its two options fixed to True and False.
+ * poll      no right answer: recorded and counted, but never scored.
+ */
+export type QuestionKind = "quiz" | "truefalse" | "poll";
+
 export interface Question {
   id: string;
+  kind: QuestionKind;
   text: string;
   options: string[];
   /** Withheld by the server until the room has been shown this question. */
@@ -50,6 +58,9 @@ export interface Question {
   /** Public URL of the question's picture, or null if it has none. */
   image_url: string | null;
 }
+
+/** A poll has nothing to reveal and nothing to be right about. */
+export const isPoll = (q: { kind?: QuestionKind } | null | undefined) => q?.kind === "poll";
 
 export interface Game {
   id: string;
@@ -163,6 +174,7 @@ export async function createQuiz(
   coverColor: string,
   authorId: string,
   questions: {
+    kind?: QuestionKind;
     text: string;
     options: string[];
     correctIndex: number;

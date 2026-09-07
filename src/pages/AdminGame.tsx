@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getGameQuestions, getLeaderboard, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswerTally, type Question, type AnswerTally, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getLeaderboard, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswerTally, isPoll, type Question, type AnswerTally, type LeaderboardEntry } from "../lib/api";
 import { motion } from "framer-motion";
 import { ArrowRightIcon, ChartBarIcon, CheckIcon, TimerIcon, TrophyIcon } from "../components/Icons";
 import CountdownTimer from "../components/CountdownTimer";
@@ -64,11 +64,20 @@ export default function AdminGame() {
             <h2 className="font-display mb-6 text-center text-2xl font-bold tracking-tight text-white">Question Results</h2>
             {currentQuestion && (
               <div className="text-center mb-6">
-                <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
-                {currentQuestion.correct_index !== null && (
-                  <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                {isPoll(currentQuestion) ? (
+                  <>
+                    <p className="mb-2 text-sm text-slate-400">How the room voted</p>
+                    <p className="text-xl font-bold text-volt">{tally?.answered ?? 0} vote{(tally?.answered ?? 0) === 1 ? "" : "s"}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-2 text-sm text-slate-400">Correct answer:</p>
+                    {currentQuestion.correct_index !== null && (
+                      <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
+                    )}
+                    <p className="mt-2 text-xs text-slate-400">{tally?.correctCount ?? 0} of {tally?.answered ?? 0} correct</p>
+                  </>
                 )}
-                <p className="mt-2 text-xs text-slate-400">{tally?.correctCount ?? 0} of {tally?.answered ?? 0} correct</p>
               </div>
             )}
             <div className="mb-6"><Leaderboard entries={leaderboard} /></div>
@@ -87,7 +96,10 @@ export default function AdminGame() {
   return (
     <div className="min-h-screen flex flex-col px-6 py-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-5">
-        <span className="text-xs uppercase tracking-wider text-slate-400">Q{(game.current_question_index ?? 0) + 1}/{questions.length}</span>
+        <span className="text-xs uppercase tracking-wider text-slate-400">
+          Q{(game.current_question_index ?? 0) + 1}/{questions.length}
+          {isPoll(currentQuestion) && <span className="ml-2 rounded bg-volt/20 px-1.5 py-0.5 text-volt">Poll</span>}
+        </span>
         <span className="text-sm text-slate-300">
           <span className="text-white font-bold">{tally?.answered ?? 0}</span> / {playerCount} answered
         </span>
@@ -109,7 +121,7 @@ export default function AdminGame() {
       <div className="mb-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {currentQuestion?.options.map((option, i) => {
           const count = tally?.optionCounts?.[i] ?? 0;
-          const isCorrect = i === currentQuestion.correct_index;
+          const isCorrect = !isPoll(currentQuestion) && i === currentQuestion.correct_index;
           return (
             <div key={i} className={`flex items-center gap-3 rounded-xl p-4 ${isCorrect ? "bg-lime/15 ring-2 ring-lime/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
               <AnswerButton text="" index={i} variant="icon" swatch disabled />

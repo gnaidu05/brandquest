@@ -6,6 +6,8 @@ interface ScorePopupProps {
   correct: boolean;
   points: number;
   streak: number;
+  /** A poll has no right answer, so it confirms rather than judges. */
+  poll?: boolean;
 }
 
 export default function ScorePopup({
@@ -13,6 +15,7 @@ export default function ScorePopup({
   correct,
   points,
   streak,
+  poll = false,
 }: ScorePopupProps) {
   return (
     <AnimatePresence>
@@ -29,11 +32,11 @@ export default function ScorePopup({
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 10 }}
               className={`font-display mb-2 flex items-center justify-center gap-3 text-5xl font-bold ${
-                correct ? "text-lime" : "text-punch"
+                poll ? "text-volt" : correct ? "text-lime" : "text-punch"
               }`}
             >
-              {correct ? <CheckIcon size={44} /> : <XIcon size={44} />}
-              {correct ? "Correct!" : "Incorrect"}
+              {poll || correct ? <CheckIcon size={44} /> : <XIcon size={44} />}
+              {poll ? "Answer in" : correct ? "Correct!" : "Incorrect"}
             </motion.div>
             {correct && points > 0 && (
               <motion.div

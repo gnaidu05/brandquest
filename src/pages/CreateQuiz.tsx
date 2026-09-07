@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createQuiz, uploadQuestionImage, QUESTION_IMAGE_TYPES, AppError } from "../lib/api";
+import { createQuiz, uploadQuestionImage, QUESTION_IMAGE_TYPES, AppError, type QuestionKind } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AnswerButton from "../components/AnswerButton";
@@ -13,7 +13,16 @@ const TIME_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 // scroller, so a ring sitting outside the button would be clipped by it.
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lime";
-interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; imageUrl: string | null; }
+interface QuestionDraft { kind: QuestionKind; text: string; options: string[]; correctIndex: number; timeLimit: number; imageUrl: string | null; }
+
+const KINDS: { value: QuestionKind; label: string; hint: string }[] = [
+  { value: "quiz", label: "Quiz", hint: "Up to four answers, one of them right." },
+  { value: "truefalse", label: "True or false", hint: "Two answers, one of them right." },
+  { value: "poll", label: "Poll", hint: "No right answer — everyone's pick is counted." },
+];
+
+const blankQuestion = (): QuestionDraft =>
+  ({ kind: "quiz", text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null });
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
@@ -27,7 +36,7 @@ export default function CreateQuiz() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverColor, setCoverColor] = useState("#c8ff32");
-  const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null }]);
+  const [questions, setQuestions] = useState<QuestionDraft[]>([blankQuestion()]);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [focusRow, setFocusRow] = useState<number | null>(null);
   const [uploading, setUploading] = useState<number | null>(null);
@@ -38,7 +47,7 @@ export default function CreateQuiz() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const addQuestion = () => { setQuestions([...questions, { text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null }]); setActiveQuestion(questions.length); };
+  const addQuestion = () => { setQuestions([...questions, blankQuestion()]); setActiveQuestion(questions.length); };
   const removeQuestion = (i: number) => {
     if (questions.length <= 1) return;
     const q = questions.filter((_, idx) => idx !== i);
@@ -67,6 +76,22 @@ export default function CreateQuiz() {
     }
   };
 
+  // Changing the kind reshapes the answers with it: true or false has its two
+  // fixed, and a quiz gets its four slots back rather than inheriting them.
+  const setKind = (i: number, kind: QuestionKind) => {
+    const next = [...questions];
+    const q = { ...next[i], kind };
+    if (kind === "truefalse") {
+      q.options = ["True", "False"];
+      q.correctIndex = Math.min(q.correctIndex, 1);
+    } else if (next[i].kind === "truefalse") {
+      q.options = ["", "", "", ""];
+      q.correctIndex = 0;
+    }
+    next[i] = q;
+    setQuestions(next);
+  };
+
   const updateQuestion = (i: number, field: keyof QuestionDraft, val: any) => { const q = [...questions]; (q[i] as any)[field] = val; setQuestions(q); };
 
   const validate = (): string[] => {
@@ -84,7 +109,7 @@ export default function CreateQuiz() {
     if (errs.length > 0) return;
     setSaving(true);
     try {
-      await createQuiz(title.trim(), description.trim(), coverColor, authorId, questions.map((q) => ({ text: q.text.trim(), options: q.options.map((o) => o.trim()), correctIndex: q.correctIndex, timeLimit: q.timeLimit, imageUrl: q.imageUrl })));
+      await createQuiz(title.trim(), description.trim(), coverColor, authorId, questions.map((q) => ({ text: q.text.trim(), options: q.options.map((o) => o.trim()), correctIndex: q.correctIndex, timeLimit: q.timeLimit, imageUrl: q.imageUrl, kind: q.kind })));
       navigate("/admin");
     } catch (e) { setErrors(["Failed to save. Try again."]); } finally { setSaving(false); }
   };
@@ -176,7 +201,7 @@ export default function CreateQuiz() {
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
               <motion.div key={activeQuestion} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="card-glass rounded-2xl p-7">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h3 className="text-lg font-bold">Question {activeQuestion + 1}</h3>
                   <div className="flex items-center gap-2">
                     <label className="text-xs uppercase tracking-wider text-slate-300">Time:</label>
@@ -186,6 +211,21 @@ export default function CreateQuiz() {
                     </select>
                   </div>
                 </div>
+
+                <div role="radiogroup" aria-label="Question type" className="mb-2 flex flex-wrap gap-2">
+                  {KINDS.map((k) => (
+                    <button key={k.value} type="button" role="radio" aria-checked={currentQ.kind === k.value}
+                      onClick={() => setKind(activeQuestion, k.value)}
+                      className={`inline-flex min-h-9 items-center rounded-lg px-3.5 text-sm font-medium transition-colors ${focusRing} ${
+                        currentQ.kind === k.value
+                          ? "bg-lime/20 text-lime ring-1 ring-lime/40"
+                          : "bg-white/5 text-slate-300 hover:bg-white/10"
+                      }`}>
+                      {k.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mb-5 text-xs text-slate-400">{KINDS.find((k) => k.value === currentQ.kind)?.hint}</p>
 
                 <input type="text" value={currentQ.text} onChange={(e) => updateQuestion(activeQuestion, "text", e.target.value)}
                   placeholder="Type your question here..."
@@ -240,18 +280,24 @@ export default function CreateQuiz() {
                     <div key={i}>
                       <label className="mb-1.5 block text-xs text-slate-400">
                         Option {i + 1}
-                        {currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-lime"><CheckIcon size={12} /> correct</span>}
+                        {currentQ.kind !== "poll" && currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-lime"><CheckIcon size={12} /> correct</span>}
                       </label>
                       <AnswerButton text={opt || "Enter answer..."} index={i} variant="compact"
-                        onClick={() => updateQuestion(activeQuestion, "correctIndex", i)} />
-                      <input type="text" value={opt} onChange={(e) => { const o = [...currentQ.options]; o[i] = e.target.value; updateQuestion(activeQuestion, "options", o); }}
+                        onClick={currentQ.kind === "poll" ? undefined : () => updateQuestion(activeQuestion, "correctIndex", i)} />
+                      <input type="text" value={opt}
+                        onChange={(e) => { const o = [...currentQ.options]; o[i] = e.target.value; updateQuestion(activeQuestion, "options", o); }}
+                        readOnly={currentQ.kind === "truefalse"}
                         placeholder={`Option ${i + 1}`}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 mt-2 text-sm outline-none focus:border-primary/50 placeholder:text-white/15 text-white" />
+                        className={`w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 mt-2 text-sm outline-none focus:border-primary/50 placeholder:text-white/15 text-white ${currentQ.kind === "truefalse" ? "opacity-60" : ""}`} />
                     </div>
                   ))}
                 </div>
 
-                <p className="mt-5 text-center text-xs text-slate-400">Click a color button to mark it as the correct answer</p>
+                <p className="mt-5 text-center text-xs text-slate-400">
+                  {currentQ.kind === "poll"
+                    ? "A poll has no right answer — the room just sees how the votes fell."
+                    : "Click a color button to mark it as the correct answer"}
+                </p>
 
                 <div className="flex items-center justify-between mt-7 pt-6 border-t border-white/5">
                   <button onClick={() => setActiveQuestion(Math.max(0, activeQuestion - 1))} disabled={activeQuestion === 0}

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createQuiz } from "../lib/api";
+import { createQuiz, uploadQuestionImage, QUESTION_IMAGE_TYPES, AppError } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AnswerButton from "../components/AnswerButton";
-import { ArrowRightIcon, CheckIcon, PlusIcon, XIcon } from "../components/Icons";
+import { ArrowRightIcon, CheckIcon, ImageIcon, PlusIcon, XIcon } from "../components/Icons";
 
 // Quiz cover swatches, drawn from the app's own palette.
 const COVER_COLORS = ["#c8ff32", "#18bfff", "#8257ff", "#ff2e88", "#00e5a0", "#7c5cff", "#ff6aa8", "#5ad1ff", "#a8dd10", "#2a2a3a"];
@@ -13,7 +13,7 @@ const TIME_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 // scroller, so a ring sitting outside the button would be clipped by it.
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lime";
-interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; }
+interface QuestionDraft { text: string; options: string[]; correctIndex: number; timeLimit: number; imageUrl: string | null; }
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
@@ -27,14 +27,18 @@ export default function CreateQuiz() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverColor, setCoverColor] = useState("#c8ff32");
-  const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]);
+  const [questions, setQuestions] = useState<QuestionDraft[]>([{ text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null }]);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [focusRow, setFocusRow] = useState<number | null>(null);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadTarget, setUploadTarget] = useState(0);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const addQuestion = () => { setQuestions([...questions, { text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20 }]); setActiveQuestion(questions.length); };
+  const addQuestion = () => { setQuestions([...questions, { text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null }]); setActiveQuestion(questions.length); };
   const removeQuestion = (i: number) => {
     if (questions.length <= 1) return;
     const q = questions.filter((_, idx) => idx !== i);
@@ -47,6 +51,22 @@ export default function CreateQuiz() {
     // keyboard focus to the top of the page. Hand it to the row that moved up.
     setFocusRow(Math.min(i, q.length - 1));
   };
+  // The file goes to storage straight away and the question keeps its URL, so
+  // saving the quiz stays one request no matter how many pictures it carries.
+  const handleImage = async (i: number, file: File | undefined) => {
+    if (!file) return;
+    setUploadError("");
+    setUploading(i);
+    try {
+      updateQuestion(i, "imageUrl", await uploadQuestionImage(file));
+    } catch (e) {
+      setUploadError(e instanceof AppError ? e.message : "Couldn't upload that image. Try again.");
+    } finally {
+      setUploading(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   const updateQuestion = (i: number, field: keyof QuestionDraft, val: any) => { const q = [...questions]; (q[i] as any)[field] = val; setQuestions(q); };
 
   const validate = (): string[] => {
@@ -64,7 +84,7 @@ export default function CreateQuiz() {
     if (errs.length > 0) return;
     setSaving(true);
     try {
-      await createQuiz(title.trim(), description.trim(), coverColor, authorId, questions.map((q) => ({ text: q.text.trim(), options: q.options.map((o) => o.trim()), correctIndex: q.correctIndex, timeLimit: q.timeLimit })));
+      await createQuiz(title.trim(), description.trim(), coverColor, authorId, questions.map((q) => ({ text: q.text.trim(), options: q.options.map((o) => o.trim()), correctIndex: q.correctIndex, timeLimit: q.timeLimit, imageUrl: q.imageUrl })));
       navigate("/admin");
     } catch (e) { setErrors(["Failed to save. Try again."]); } finally { setSaving(false); }
   };
@@ -169,7 +189,51 @@ export default function CreateQuiz() {
 
                 <input type="text" value={currentQ.text} onChange={(e) => updateQuestion(activeQuestion, "text", e.target.value)}
                   placeholder="Type your question here..."
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4 text-lg mb-7 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 placeholder:text-white/15 text-white" />
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4 text-lg mb-5 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 placeholder:text-white/15 text-white" />
+
+                {/* One optional picture per question, shown to the room above
+                    the question text. It is uploaded on selection, so the URL
+                    is all that is saved with the quiz. */}
+                <div className="mb-7">
+                  <input
+                    ref={activeQuestion === uploadTarget ? fileRef : undefined}
+                    id={`question-image-${activeQuestion}`}
+                    type="file"
+                    accept={QUESTION_IMAGE_TYPES.join(",")}
+                    className="sr-only"
+                    onChange={(e) => { setUploadTarget(activeQuestion); void handleImage(activeQuestion, e.target.files?.[0]); }}
+                  />
+                  {currentQ.imageUrl ? (
+                    <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                      <img src={currentQ.imageUrl} alt="" className="h-20 w-28 shrink-0 rounded-lg object-cover" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white">Image added</p>
+                        <p className="mt-0.5 text-xs text-slate-400">Players see it above the question.</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <label htmlFor={`question-image-${activeQuestion}`}
+                          className={`inline-flex min-h-9 cursor-pointer items-center rounded-lg bg-white/5 px-3 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10 ${focusRing}`}>
+                          Replace
+                        </label>
+                        <button type="button" onClick={() => updateQuestion(activeQuestion, "imageUrl", null)}
+                          aria-label="Remove the image from this question"
+                          className={`inline-flex min-h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-punch ${focusRing}`}>
+                          <XIcon size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label htmlFor={`question-image-${activeQuestion}`}
+                      className={`flex min-h-20 cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-4 text-sm text-slate-400 transition-colors hover:border-lime/40 hover:bg-lime/[0.04] hover:text-slate-200 ${focusRing}`}>
+                      {uploading === activeQuestion ? (
+                        <><span className="h-4 w-4 animate-spin rounded-full border-2 border-lime border-t-transparent" /> Uploading…</>
+                      ) : (
+                        <><ImageIcon size={18} /> Add an image <span className="text-slate-500">(optional, up to 2 MB)</span></>
+                      )}
+                    </label>
+                  )}
+                  {uploadError && <p className="mt-2 text-sm text-punch">{uploadError}</p>}
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {currentQ.options.map((opt, i) => (

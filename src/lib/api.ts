@@ -201,13 +201,35 @@ export async function createQuiz(
  * Only the author id the quiz was created under can delete it. That id is a
  * UUID this browser generated, so it works as a key: a quiz cannot be removed
  * by someone who has never held it.
+ *
+ * The function reports which pictures the delete left with nothing pointing at
+ * them, and those are removed here rather than in SQL: deleting the row in
+ * storage.objects would drop the metadata and leave the bytes in the bucket,
+ * paid for and unreachable. Only the Storage API removes both.
+ *
+ * A picture another quiz still uses is not in that list, and the bucket policy
+ * would refuse it anyway.
  */
 export async function deleteQuiz(id: string, authorId: string): Promise<void> {
-  const { error } = await supabase.rpc("delete_quiz", {
+  const { data, error } = await supabase.rpc("delete_quiz", {
     p_quiz_id: id,
     p_author_id: authorId,
   });
   if (error) throw asAppError(error, "Could not delete the quiz");
+
+  // The quiz is already gone. A picture left behind is untidy, not a failure,
+  // so this never turns a successful delete into an error the person sees.
+  const orphaned = (Array.isArray(data) ? data : []).filter(
+    (name): name is string => typeof name === "string" && name.length > 0
+  );
+  if (orphaned.length === 0) return;
+
+  const { error: storageError } = await supabase.storage
+    .from("question-media")
+    .remove(orphaned);
+  if (storageError) {
+    console.error("Deleted the quiz but could not remove its images", storageError);
+  }
 }
 
 // ── Game Functions ─────────────────────────────────

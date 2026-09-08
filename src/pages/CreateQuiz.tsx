@@ -19,7 +19,11 @@ const KINDS: { value: QuestionKind; label: string; hint: string }[] = [
   { value: "quiz", label: "Quiz", hint: "Up to four answers, one of them right." },
   { value: "truefalse", label: "True or false", hint: "Two answers, one of them right." },
   { value: "poll", label: "Poll", hint: "No right answer — everyone's pick is counted." },
+  { value: "text", label: "Type answer", hint: "Nothing to pick — players type it, and score if they spell it your way." },
 ];
+
+/** A typed question can accept several spellings of the same answer. */
+const MAX_SPELLINGS = 6;
 
 const blankQuestion = (): QuestionDraft =>
   ({ kind: "quiz", text: "", options: ["", "", "", ""], correctIndex: 0, timeLimit: 20, imageUrl: null });
@@ -47,7 +51,7 @@ export default function CreateQuiz() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const addQuestion = () => { setQuestions([...questions, blankQuestion()]); setActiveQuestion(questions.length); };
+  const addQuestion = () => { setQuestions((qs) => [...qs, blankQuestion()]); setActiveQuestion(questions.length); };
   const removeQuestion = (i: number) => {
     if (questions.length <= 1) return;
     const q = questions.filter((_, idx) => idx !== i);
@@ -87,29 +91,62 @@ export default function CreateQuiz() {
   };
 
   // Changing the kind reshapes the answers with it: true or false has its two
-  // fixed, and a quiz gets its four slots back rather than inheriting them.
-  const setKind = (i: number, kind: QuestionKind) => {
-    const next = [...questions];
-    const q = { ...next[i], kind };
-    if (kind === "truefalse") {
-      q.options = ["True", "False"];
-      q.correctIndex = Math.min(q.correctIndex, 1);
-    } else if (next[i].kind === "truefalse") {
-      q.options = ["", "", "", ""];
-      q.correctIndex = 0;
-    }
-    next[i] = q;
-    setQuestions(next);
-  };
+  // fixed, a typed answer has no options at all, and a quiz gets its four
+  // slots back rather than inheriting whatever the last kind left behind.
+  const setKind = (i: number, kind: QuestionKind) =>
+    editQuestion(i, (was) => {
+      if (kind === was.kind) return was;
+      const q = { ...was, kind };
+      if (kind === "truefalse") {
+        q.options = ["True", "False"];
+        q.correctIndex = Math.min(q.correctIndex, 1);
+      } else if (kind === "text") {
+        // The answer they had already marked right is the one worth keeping.
+        q.options = [was.options[was.correctIndex] ?? ""];
+        q.correctIndex = 0;
+      } else if (was.kind === "truefalse" || was.kind === "text") {
+        q.options = ["", "", "", ""];
+        q.correctIndex = 0;
+      }
+      return q;
+    });
 
-  const updateQuestion = (i: number, field: keyof QuestionDraft, val: any) => { const q = [...questions]; (q[i] as any)[field] = val; setQuestions(q); };
+  const addSpelling = (i: number) =>
+    editQuestion(i, (q) =>
+      q.options.length >= MAX_SPELLINGS ? q : { ...q, options: [...q.options, ""] });
+
+  const removeSpelling = (i: number, j: number) =>
+    editQuestion(i, (q) =>
+      q.options.length <= 1 ? q : { ...q, options: q.options.filter((_, k) => k !== j) });
+
+  /**
+   * Changes one question, working from the list as it is rather than from the
+   * copy this render closed over.
+   *
+   * The editor card animates out while it is still on screen and still taking
+   * input, so an edit can arrive from a card that is one state behind. Reading
+   * `questions` directly meant such an edit wrote back a whole stale array —
+   * dropping a question added a moment earlier, and leaving the editor pointed
+   * at one that no longer existed. It also used to write through the question
+   * object in place, which is the same hazard seen from the other end.
+   */
+  const editQuestion = (i: number, change: (q: QuestionDraft) => QuestionDraft) =>
+    setQuestions((qs) => (i >= qs.length ? qs : qs.map((q, k) => (k === i ? change(q) : q))));
+
+  const updateQuestion = (i: number, field: keyof QuestionDraft, val: any) =>
+    editQuestion(i, (q) => ({ ...q, [field]: val }));
 
   const validate = (): string[] => {
     const e: string[] = [];
     if (!title.trim()) e.push("Quiz title is required");
     questions.forEach((q, i) => {
       if (!q.text.trim()) e.push(`Question ${i + 1}: text is required`);
-      q.options.forEach((o, j) => { if (!o.trim()) e.push(`Question ${i + 1}, Option ${j + 1}: empty`); });
+      q.options.forEach((o, j) => {
+        if (o.trim()) return;
+        e.push(q.kind === "text"
+          ? `Question ${i + 1}, Accepted answer ${j + 1}: empty`
+          : `Question ${i + 1}, Option ${j + 1}: empty`);
+      });
     });
     return e;
   };
@@ -210,7 +247,7 @@ export default function CreateQuiz() {
           {/* Right: Question Editor */}
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
-              <motion.div key={activeQuestion} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="card-glass rounded-2xl p-7">
+              <motion.div key={activeQuestion} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12, pointerEvents: "none" }} className="card-glass rounded-2xl p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h3 className="text-lg font-bold">Question {activeQuestion + 1}</h3>
                   <div className="flex items-center gap-2">
@@ -285,27 +322,60 @@ export default function CreateQuiz() {
                   {uploadError && <p className="mt-2 text-sm text-punch">{uploadError}</p>}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  {currentQ.options.map((opt, i) => (
-                    <div key={i}>
-                      <label className="mb-1.5 block text-xs text-slate-400">
-                        Option {i + 1}
-                        {currentQ.kind !== "poll" && currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-lime"><CheckIcon size={12} /> correct</span>}
-                      </label>
-                      <AnswerButton text={opt || "Enter answer..."} index={i} variant="compact"
-                        onClick={currentQ.kind === "poll" ? undefined : () => updateQuestion(activeQuestion, "correctIndex", i)} />
-                      <input type="text" value={opt}
-                        onChange={(e) => { const o = [...currentQ.options]; o[i] = e.target.value; updateQuestion(activeQuestion, "options", o); }}
-                        readOnly={currentQ.kind === "truefalse"}
-                        placeholder={`Option ${i + 1}`}
-                        className={`w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 mt-2 text-sm outline-none focus:border-primary/50 placeholder:text-white/15 text-white ${currentQ.kind === "truefalse" ? "opacity-60" : ""}`} />
-                    </div>
-                  ))}
-                </div>
+                {/* A typed question has no options to lay out — it has the
+                    spellings that score, which are a list rather than a set of
+                    four coloured tiles. */}
+                {currentQ.kind === "text" ? (
+                  <div className="space-y-2.5">
+                    {currentQ.options.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-slate-200">{i + 1}</span>
+                        <input type="text" value={opt}
+                          onChange={(e) => { const o = [...currentQ.options]; o[i] = e.target.value; updateQuestion(activeQuestion, "options", o); }}
+                          aria-label={i === 0 ? "Accepted answer 1, shown when the answer is revealed" : `Accepted answer ${i + 1}`}
+                          placeholder={i === 0 ? "The answer" : "Another spelling you'll accept"}
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary/50 placeholder:text-white/15 text-white" />
+                        {currentQ.options.length > 1 && (
+                          <button type="button" onClick={() => removeSpelling(activeQuestion, i)}
+                            aria-label={`Remove accepted answer ${i + 1}`}
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-punch ${focusRing}`}>
+                            <XIcon size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {currentQ.options.length < MAX_SPELLINGS && (
+                      <button type="button" onClick={() => addSpelling(activeQuestion)}
+                        className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-white/5 px-3 text-xs font-semibold text-slate-200 transition-colors hover:bg-white/10 ${focusRing}`}>
+                        <PlusIcon size={13} /> Accept another spelling
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {currentQ.options.map((opt, i) => (
+                      <div key={i}>
+                        <label className="mb-1.5 block text-xs text-slate-400">
+                          Option {i + 1}
+                          {currentQ.kind !== "poll" && currentQ.correctIndex === i && <span className="ml-1.5 inline-flex items-center gap-1 font-medium text-lime"><CheckIcon size={12} /> correct</span>}
+                        </label>
+                        <AnswerButton text={opt || "Enter answer..."} index={i} variant="compact"
+                          onClick={currentQ.kind === "poll" ? undefined : () => updateQuestion(activeQuestion, "correctIndex", i)} />
+                        <input type="text" value={opt}
+                          onChange={(e) => { const o = [...currentQ.options]; o[i] = e.target.value; updateQuestion(activeQuestion, "options", o); }}
+                          readOnly={currentQ.kind === "truefalse"}
+                          placeholder={`Option ${i + 1}`}
+                          className={`w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 mt-2 text-sm outline-none focus:border-primary/50 placeholder:text-white/15 text-white ${currentQ.kind === "truefalse" ? "opacity-60" : ""}`} />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <p className="mt-5 text-center text-xs text-slate-400">
                   {currentQ.kind === "poll"
                     ? "A poll has no right answer — the room just sees how the votes fell."
+                    : currentQ.kind === "text"
+                    ? "Spelling counts, but capitals and spacing don't. Add every spelling you'd accept — the first is the one the room is shown."
                     : "Click a color button to mark it as the correct answer"}
                 </p>
 

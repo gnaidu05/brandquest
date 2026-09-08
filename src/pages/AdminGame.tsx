@@ -1,11 +1,49 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getGameQuestions, getLeaderboard, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswerTally, isPoll, type Question, type AnswerTally, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getLeaderboard, getNonHostPlayers, showResults, nextQuestion, subscribeToGame, subscribeToAnswerTally, isPoll, isText, type Question, type AnswerTally, type LeaderboardEntry, type TypedAnswer } from "../lib/api";
 import { motion } from "framer-motion";
 import { ArrowRightIcon, ChartBarIcon, CheckIcon, TimerIcon, TrophyIcon } from "../components/Icons";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
 import Leaderboard from "../components/Leaderboard";
+
+/**
+ * What the room typed, most common first.
+ *
+ * A typed question has no fixed set of answers to lay out, so this is built
+ * from what actually came back. The server has already folded spellings that
+ * differ only by case or spacing together and marked which of them scored.
+ */
+function TypedAnswers({ answers }: { answers: TypedAnswer[] | null | undefined }) {
+  if (!answers || answers.length === 0) {
+    return (
+      <p className="rounded-xl bg-white/[0.03] p-4 text-center text-sm text-slate-400 ring-1 ring-white/8">
+        Nothing typed yet.
+      </p>
+    );
+  }
+  const most = Math.max(...answers.map((a) => a.count));
+  return (
+    <ul className="space-y-2">
+      {answers.map((a) => (
+        <li key={a.answer}
+          className={`flex items-center gap-3 rounded-xl p-3.5 ${a.correct ? "bg-lime/15 ring-2 ring-lime/60" : "bg-white/[0.03] ring-1 ring-white/8"}`}>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="break-words text-sm font-medium leading-snug text-slate-200">{a.answer}</span>
+              {a.correct && <CheckIcon size={13} className="shrink-0 text-lime" />}
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className={`h-full rounded-full ${a.correct ? "bg-lime" : "bg-white/30"}`}
+                style={{ width: `${most ? Math.round((a.count / most) * 100) : 0}%` }} />
+            </div>
+          </div>
+          <div className="text-xl font-bold tabular-nums text-white">{a.count}</div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function AdminGame() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -76,6 +114,12 @@ export default function AdminGame() {
                       <p className="text-xl font-bold text-lime">{currentQuestion.options[currentQuestion.correct_index]}</p>
                     )}
                     <p className="mt-2 text-xs text-slate-400">{tally?.correctCount ?? 0} of {tally?.answered ?? 0} correct</p>
+                    {isText(currentQuestion) && (
+                      <div className="mt-5 text-left">
+                        <p className="mb-2 text-xs uppercase tracking-wider text-slate-400">What the room typed</p>
+                        <TypedAnswers answers={tally?.textAnswers} />
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -99,6 +143,7 @@ export default function AdminGame() {
         <span className="text-xs uppercase tracking-wider text-slate-400">
           Q{(game.current_question_index ?? 0) + 1}/{questions.length}
           {isPoll(currentQuestion) && <span className="ml-2 rounded bg-volt/20 px-1.5 py-0.5 text-volt">Poll</span>}
+          {isText(currentQuestion) && <span className="ml-2 rounded bg-lime/20 px-1.5 py-0.5 text-lime">Type answer</span>}
         </span>
         <span className="text-sm text-slate-300">
           <span className="text-white font-bold">{tally?.answered ?? 0}</span> / {playerCount} answered
@@ -118,6 +163,17 @@ export default function AdminGame() {
         <h2 className="text-xl sm:text-2xl font-bold text-center">{currentQuestion?.text}</h2>
       </div>
 
+      {/* A typed question has no options to lay out — only the spellings that
+          score, which only the host can see, and whatever the room writes. */}
+      {isText(currentQuestion) ? (
+        <div className="mb-6 space-y-4">
+          <div className="rounded-xl bg-lime/10 p-4 ring-1 ring-lime/30">
+            <p className="text-xs uppercase tracking-wider text-slate-300">Scores as correct</p>
+            <p className="mt-1 break-words text-sm font-semibold text-lime">{currentQuestion.options.join("  ·  ")}</p>
+          </div>
+          <TypedAnswers answers={tally?.textAnswers} />
+        </div>
+      ) : (
       <div className="mb-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {currentQuestion?.options.map((option, i) => {
           const count = tally?.optionCounts?.[i] ?? 0;
@@ -138,6 +194,7 @@ export default function AdminGame() {
           );
         })}
       </div>
+      )}
 
       <motion.button whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }} onClick={async () => { if (game) await showResults(game.id, hostId); }}
         className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold"><ChartBarIcon size={18} /> Show results</motion.button>

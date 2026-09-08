@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getGame, getGameQuestions, getNonHostPlayers, getLeaderboard, getAnswerTally, submitAnswer, subscribeToGame, isPoll, type Question, type Player, type AnswerTally, type LeaderboardEntry } from "../lib/api";
+import { getGame, getGameQuestions, getNonHostPlayers, getLeaderboard, getAnswerTally, submitAnswer, subscribeToGame, isPoll, isText, type Question, type Player, type AnswerTally, type LeaderboardEntry } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import CountdownTimer from "../components/CountdownTimer";
 import AnswerButton from "../components/AnswerButton";
@@ -18,7 +18,11 @@ export default function PlayGame() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tally, setTally] = useState<AnswerTally | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [typed, setTyped] = useState("");
   const [answered, setAnswered] = useState(false);
+  // Guards a second submit in the same tick, before the answered state has
+  // been applied — a double tap, or Enter held down on a typed answer.
+  const submitting = useRef(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState({ correct: false, points: 0, streak: 0 });
   const questionStartTime = useRef(Date.now());
@@ -72,26 +76,31 @@ export default function PlayGame() {
     return () => { cancelled = true; };
   }, [gameId, game?.status, game?.current_question_index]);
 
-  useEffect(() => { setSelectedOption(null); setAnswered(false); setShowPopup(false); questionStartTime.current = Date.now(); }, [game?.current_question_index]);
+  useEffect(() => { setSelectedOption(null); setTyped(""); setAnswered(false); setShowPopup(false); submitting.current = false; questionStartTime.current = Date.now(); }, [game?.current_question_index]);
   useEffect(() => { if (game?.status === "finished") navigate(`/game/${gameId}/results`); }, [game?.status, gameId, navigate]);
 
   const currentQuestion = questions[game?.current_question_index ?? -1];
 
-  const handleAnswer = useCallback(async (opt: number) => {
-    if (answered || !game || !playerId || selectedOption !== null) return;
+  // One path for both ways of answering: a picked option, or typed words.
+  // Which of the two is right is settled on the server either way.
+  const record = useCallback(async (opt: number | null, text: string | null) => {
+    if (answered || submitting.current || !game || !playerId) return;
+    submitting.current = true;
     setSelectedOption(opt); setAnswered(true);
     const elapsed = (Date.now() - questionStartTime.current) / 1000;
     try {
-      const r = await submitAnswer(game.id, playerId, game.current_question_index, opt, elapsed);
+      const r = await submitAnswer(game.id, playerId, game.current_question_index, opt, elapsed, text);
       setPopupData({ correct: r.correct, points: r.points, streak: r.streak });
       setShowPopup(true); setTimeout(() => setShowPopup(false), 2500);
       getLeaderboard(gameId!).then(setLeaderboard);
     } catch (e) { console.error(e); }
-  }, [answered, game, playerId, selectedOption, gameId]);
+  }, [answered, game, playerId, gameId]);
+
+  const handleAnswer = useCallback((opt: number) => { void record(opt, null); }, [record]);
 
   const handleTimeUp = useCallback(() => {
     if (!answered && game) {
-      setAnswered(true); setSelectedOption(-1);
+      setAnswered(true); setSelectedOption(-1); submitting.current = true;
       setPopupData({ correct: false, points: 0, streak: 0 });
       // Running out of time on a poll is a missed vote, not a wrong answer,
       // so it passes without the red cross.
@@ -200,11 +209,38 @@ export default function PlayGame() {
             <h2 className="text-balance text-center text-lg font-bold leading-snug sm:text-2xl">{currentQuestion.text}</h2>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {currentQuestion.options.map((option, i) => (
-              <AnswerButton key={`${game.current_question_index}-${i}`} text={option} index={i} onClick={() => handleAnswer(i)} selected={selectedOption === i} disabled={answered} />
-            ))}
-          </div>
+          {/* A typed question has nothing to lay out in tiles, and its
+              accepted spellings do not reach this screen until the question is
+              over — so there is only the box to write in. */}
+          {isText(currentQuestion) ? (
+            <form onSubmit={(e) => { e.preventDefault(); void record(null, typed); }} className="flex flex-col gap-3">
+              <input
+                type="text"
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                disabled={answered}
+                maxLength={200}
+                autoFocus
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-label="Your answer"
+                placeholder="Type your answer…"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-center text-lg text-white outline-none transition-colors placeholder:text-white/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/30 disabled:opacity-50 sm:text-xl" />
+              <button type="submit" disabled={answered || !typed.trim()}
+                className="min-h-12 w-full rounded-2xl brand-gradient text-base font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-30">
+                Submit answer
+              </button>
+              <p className="text-center text-xs text-slate-400">Spell it right. Capitals and spacing don't matter.</p>
+            </form>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {currentQuestion.options.map((option, i) => (
+                <AnswerButton key={`${game.current_question_index}-${i}`} text={option} index={i} onClick={() => handleAnswer(i)} selected={selectedOption === i} disabled={answered} />
+              ))}
+            </div>
+          )}
 
           {answered && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center mt-5">

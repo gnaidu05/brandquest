@@ -43,13 +43,16 @@ export interface Quiz {
  * quiz      2-6 options, one right, scored on speed.
  * truefalse the same, with its two options fixed to True and False.
  * poll      no right answer: recorded and counted, but never scored.
+ * text      nothing to pick: the player types, and scores if they spell it
+ *           the way the author does.
  */
-export type QuestionKind = "quiz" | "truefalse" | "poll";
+export type QuestionKind = "quiz" | "truefalse" | "poll" | "text";
 
 export interface Question {
   id: string;
   kind: QuestionKind;
   text: string;
+  /** For a typed question these are the spellings the author accepts. */
   options: string[];
   /** Withheld by the server until the room has been shown this question. */
   correct_index: number | null;
@@ -61,6 +64,9 @@ export interface Question {
 
 /** A poll has nothing to reveal and nothing to be right about. */
 export const isPoll = (q: { kind?: QuestionKind } | null | undefined) => q?.kind === "poll";
+
+/** A typed question has no options to show: the player writes their answer. */
+export const isText = (q: { kind?: QuestionKind } | null | undefined) => q?.kind === "text";
 
 export interface Game {
   id: string;
@@ -87,17 +93,28 @@ export interface Player {
   is_host: boolean;
 }
 
+/** One thing the room typed, and how many of them typed it. */
+export interface TypedAnswer {
+  answer: string;
+  count: number;
+  correct: boolean;
+}
+
 /**
  * How a room answered one question.
  *
  * The breakdown is withheld from players until the question is over, so
- * `correctCount` and `optionCounts` are null while it is still being answered.
- * `answered` is always there — it is only a head count.
+ * `correctCount`, `optionCounts` and `textAnswers` are null while it is still
+ * being answered. `answered` is always there — it is only a head count.
+ *
+ * A question has one breakdown or the other, never both: `optionCounts` for
+ * anything with options to pick between, `textAnswers` for a typed one.
  */
 export interface AnswerTally {
   answered: number;
   correctCount: number | null;
   optionCounts: number[] | null;
+  textAnswers: TypedAnswer[] | null;
 }
 
 export interface LeaderboardEntry {
@@ -194,6 +211,7 @@ export async function createQuiz(
   questions: {
     kind?: QuestionKind;
     text: string;
+    /** For a typed question, the spellings that score. */
     options: string[];
     correctIndex: number;
     timeLimit: number;
@@ -389,14 +407,20 @@ export async function getPlayer(id: string): Promise<Player | null> {
  * constraint on (game_id, question_index, player_id) makes a double tap
  * idempotent rather than double-scoring.
  *
+ * A typed answer passes `textAnswer` and no option. Whether it is right is
+ * settled in SQL against the spellings the author accepts, which never leave
+ * the server for a typed question, so the answer cannot be read off the wire
+ * before it is given.
+ *
  * Requires supabase/fix5.sql to have been applied.
  */
 export async function submitAnswer(
   gameId: string,
   playerId: string,
   questionIndex: number,
-  selectedOption: number,
-  timeElapsed: number
+  selectedOption: number | null,
+  timeElapsed: number,
+  textAnswer?: string | null
 ): Promise<{ alreadyAnswered: boolean; points: number; correct: boolean; streak: number }> {
   const { data, error } = await supabase.rpc("submit_answer", {
     p_game_id: gameId,
@@ -404,6 +428,7 @@ export async function submitAnswer(
     p_question_index: questionIndex,
     p_selected_option: selectedOption,
     p_time_elapsed: timeElapsed,
+    p_text_answer: textAnswer ?? null,
   });
   if (error) throw asAppError(error, "Could not record the answer");
 
@@ -479,14 +504,20 @@ export async function getAnswerTally(
   if (error) throw asAppError(error, "Could not load the answer tally");
 
   const row = (Array.isArray(data) ? data[0] : data) as
-    | { answered: number; correct_count: number | null; option_counts: number[] | null }
+    | {
+        answered: number;
+        correct_count: number | null;
+        option_counts: number[] | null;
+        text_answers: TypedAnswer[] | null;
+      }
     | undefined;
-  if (!row) return { answered: 0, correctCount: null, optionCounts: null };
+  if (!row) return { answered: 0, correctCount: null, optionCounts: null, textAnswers: null };
 
   return {
     answered: row.answered ?? 0,
     correctCount: row.correct_count,
     optionCounts: row.option_counts,
+    textAnswers: row.text_answers ?? null,
   };
 }
 
